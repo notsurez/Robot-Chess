@@ -1,2 +1,2 @@
-# Robot_Chess
+# Robot-Chess
 Junior design project at SUNY Polytechnic institute. 
