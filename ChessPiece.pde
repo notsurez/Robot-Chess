@@ -25,39 +25,7 @@ class ChessPiece {
   char pieceType; 
   Boolean selected = false;
   boolean firstMove = false;
-  
-
-  
-  
-    void DefaultBoard(){
-    int z = 0;
-    BitBoard[0] = 'r';
-    BitBoard[1] = 'n';
-    BitBoard[2] = 'b';
-    BitBoard[3] = 'q';
-    BitBoard[4] = 'k';
-    BitBoard[5] = 'b';
-    BitBoard[6] = 'n';
-    BitBoard[7] = 'r';
-    for(z = 8; z < 16; z++){
-      BitBoard[z] = 'p';
-    }
-    for(z = 16; z < 48; z++){
-      BitBoard[z] = ' ';
-    }
-    for(z = 48; z < 56; z++){
-      BitBoard[z] = 'P';
-    }
-    BitBoard[56] = 'R';
-    BitBoard[57] = 'N';
-    BitBoard[58] = 'B';
-    BitBoard[59] = 'Q';
-    BitBoard[60] = 'K';
-    BitBoard[61] = 'B';
-    BitBoard[62] = 'N';
-    BitBoard[63] = 'R';
-  }
-  
+  byte BitBoard[] = new byte[64];
   
   ChessPiece(char pt, float xpos, float ypos,float s, int bitBI){
     imageMode(CENTER);
@@ -155,11 +123,33 @@ class ChessPiece {
     }
   }
   
-  void updateBB() {
-    BitBoard[bbIndex] = ' ';
-    bbIndex = (int) floor(x/(int)gridSize)+floor(y/(int)gridSize)*8;
+void updateBB() {
+    BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
+    int TobbIndex = (int) floor(x/(int)gridSize)+floor(y/(int)gridSize)*8; //Calculate new BB position
+
+
+    println(BitBoard[bbIndex]); // Print which 
+
+    if(BitBoard[TobbIndex] != 32 && BitBoard[TobbIndex] != 0) { //if the TO position contains a piece
+      //BitBoard[TobbIndex] = ' '; 
+      board[TobbIndex%8][floor(TobbIndex/8)] = null; //Remove the piece object
+      println("PIECE REMOVED ", (char)BitBoard[TobbIndex], " on (", TobbIndex%8, ",",floor(TobbIndex/8), ")"  );
+    }
+
+
+    bbIndex = TobbIndex;
     BitBoard[bbIndex] = (byte)pieceType;
-  }
+    println("UPDATE:", bbIndex, "=", pieceType);
+
+    // Print BitBoard for debugging
+    for(int i = 0; i < 64; i++) {
+      if(BitBoard[i] == 0) print(" ");
+     print((char)BitBoard[i]);
+     if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
+       println();
+     }
+    }
+}
   
   void highlightLegal() {
     if(selected){
@@ -178,6 +168,19 @@ class ChessPiece {
   boolean isLegal(int From, int To){
     boolean IsitLegal = false;
     byte PlayersPiece = BitBoard[From];
+    float m = 0, x_1 = 0, x_2 = 0, y_1 = 0, y_2 = 0;
+      x_1 = From%8;
+      x_2 = To%8;
+      y_1 = floor(From/8);
+      y_2 = floor(To/8);
+      if(x_1 == x_2){
+        m = 0;
+      }
+      else{
+      m = (y_2-y_1)/(x_2-x_1);
+      }
+      float d = sqrt(sq(x_2-x_1)+sq(y_2-y_1));
+    
     switch(PlayersPiece){
       case 'p':
       if(From >= 8 && From < 16){ //Condition for testing if the pawn is on the 2nd rank and can move two squares
@@ -204,16 +207,26 @@ class ChessPiece {
       break;
       
       case 'r': //Black Rook
+     if(y_2 == y_1|| x_2 == x_1){
+       IsitLegal = true;
+     }
+        if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+          return false;
+        }
+        if(BitBoard[To] == 'P'||BitBoard[To] =='Q'||BitBoard[To] =='B'||BitBoard[To] == 'N'||BitBoard[To] == 'R'){
+          IsitLegal = true;
+        }
+        if(To > 63 ||To < 0){ //Returns false if the knight is moved off the board
+        return false;
+      }
+        
         
       break;
             
       case 'n': //Black Knight
-       if(To-From == 17 ||To-From == 15 ||To-From == 10 ||To-From == 6 ||To-From == -6 ||To-From ==-10 ||To-From == -15||To-From == -17){ //Tests to make sure a knight is moved to a square that is available to it 
-         IsitLegal = true;
-       }
-       else{ // returns false if the knight is not moved to a legal square 
-         return false;
-       }
+     if((abs(m) == 0.5||abs(m) == 2)&&(d == sqrt(5))){
+       IsitLegal = true;
+     }
        if(BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] =='k'||BitBoard[To] == 'p'){ // Condition to test if the knight is trying to move to a square occupied by a friendly piece
         return false;
       }
@@ -228,22 +241,28 @@ class ChessPiece {
       break;      
       
       case 'b': //Black Bishop
-      
+
+      if(m == 1 || m == -1){
+        IsitLegal = true;
+      }
+       if(To < 0|| To > 63){ //returns false if move is off the board
+        return false;
+      }
+        
        
       break;
       
       case 'q': //Black Queen
+        if((y_2 == y_1|| m == 0)||(m == 1 || m == -1)){
+       IsitLegal = true;
+     }
        
       break;
       
       case 'k': //Black King
-      if(To-From == 9||To-From == 8||To-From == 7||To-From == 1||To-From == -1||To-From == -7||To-From == -8||To-From == -9){
+   if(d == 1||d == sqrt(2)){
         IsitLegal = true;
       }
-      else{
-        return false;
-      }
-   
         if(BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] == 'p'||BitBoard[To] == 'k'){  // Condition to test if the king is trying to move to a square occupied by a friendly piece
          return false;
       }
@@ -283,16 +302,25 @@ class ChessPiece {
       break;
            
       case 'R': //White Rook
-       
+       if(y_2 == y_1|| x_2 == x_1){
+       IsitLegal = true;
+     }
+        if(BitBoard[To] == 'P' ||BitBoard[To] == 'R' ||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
+          return false;
+        }
+        if(BitBoard[To] == 'p'||BitBoard[To] =='q'||BitBoard[To] =='b'||BitBoard[To] == 'n'||BitBoard[To] == 'r'){
+          IsitLegal = true;
+        }
+        if(To > 63 ||To < 0){ //Returns false if the knight is moved off the board
+        return false;
+      }
       break;     
       
       case 'N': //White Knight
-             if(To-From == 17 ||To-From == 15 ||To-From == 10 ||To-From == 6 ||To-From == -6 ||To-From ==-10 ||To-From == -15||To-From == -17){ //Tests to make sure a knight is moved to a square that is available to it 
-         IsitLegal = true;
-       }
-       else{ // returns false if the knight is not moved to a legal square 
-         return false;
-       }
+     if((abs(m) == 0.5||abs(m) == 2)&&(d == sqrt(5))){
+       IsitLegal = true;
+     }
+     
        if(BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] == 'p'){ //Condition to allow a knight to capture if it is trying to move to a square
          IsitLegal = true;
       }
@@ -306,19 +334,24 @@ class ChessPiece {
       break;      
       
       case 'B': //White Bishop// 
-       
+      if(m == 1 || m == -1){
+        IsitLegal = true;
+      }
+       if(To < 0|| To > 63){ //returns false if move is off the board
+        return false;
+      }
       break;
       
       case 'Q': //White Queen
+        if((y_2 == y_1|| m == 0)||(m == 1 || m == -1)){
+       IsitLegal = true;
+     }
         
       break;
       
       case 'K': //White King
-         if(To-From == 9||To-From == 8||To-From == 7||To-From == 1||To-From == -1||To-From == -7||To-From == -8||To-From == -9){
+      if(d == 1||d == sqrt(2)){
         IsitLegal = true;
-      }
-      else{
-        return false;
       }
         if(BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] == 'p'){ //Condition to allow a king to capture if it is trying to move to a square
          IsitLegal = true;
