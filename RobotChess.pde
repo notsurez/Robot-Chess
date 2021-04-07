@@ -32,6 +32,9 @@ Boolean whites_turn = true;
   setup is a 
 */
 void setup() {
+  
+  for(int i = 0; i < 64; i++) BitBoard[i] = ' ';
+  
   size(1200,800);
   background(50,50,70);
   
@@ -212,7 +215,6 @@ void mouseReleased() {
           board[i][j].x = int(mouseX/gridSize)*(gridSize)+gridSize/2;
           board[i][j].y = int(mouseY/gridSize)*(gridSize)+gridSize/2;
           board[i][j].updateBB();
-          //print(toBase64(BitBoard));
         }
         
       }

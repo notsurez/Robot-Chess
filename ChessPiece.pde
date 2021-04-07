@@ -25,7 +25,7 @@ class ChessPiece {
   char pieceType; 
   Boolean selected = false;
   boolean firstMove = false;
-  byte BitBoard[] = new byte[64];
+  //byte BitBoard[] = new byte[64];
   
   ChessPiece(char pt, float xpos, float ypos,float s, int bitBI){
     imageMode(CENTER);
@@ -131,7 +131,7 @@ void updateBB() {
     println(BitBoard[bbIndex]); // Print which 
 
     if(BitBoard[TobbIndex] != 32 && BitBoard[TobbIndex] != 0) { //if the TO position contains a piece
-      //BitBoard[TobbIndex] = ' '; 
+      BitBoard[TobbIndex] = ' '; 
       board[TobbIndex%8][floor(TobbIndex/8)] = null; //Remove the piece object
       println("PIECE REMOVED ", (char)BitBoard[TobbIndex], " on (", TobbIndex%8, ",",floor(TobbIndex/8), ")"  );
     }
@@ -142,12 +142,16 @@ void updateBB() {
     println("UPDATE:", bbIndex, "=", pieceType);
 
     // Print BitBoard for debugging
+    println("Print BitBoard for debugging");
     for(int i = 0; i < 64; i++) {
      print((char)BitBoard[i]);
      if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
        println();
      }
     }
+    println(" ");
+    print("base64 string: ");
+    println(toBase64(BitBoard, false, false)); //the bitboard, is castling, castling queen(false) or king(true)
 }
   
   void highlightLegal() {
