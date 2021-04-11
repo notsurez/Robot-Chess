@@ -2,9 +2,7 @@
   Class for the chess piece object. The object will contain all the information used to display each chess piece
   determine legal moves, and allow the user to select pieces
   
-  Written by: Christian Brazeau
-  Other Contributers: 
-    Timothy Reichert (legal move logic)
+  Written by: Christian Brazeau, Timothy Reichert, and Peter Taranto
   Last modified: 03/12/2021
 */
 
@@ -29,18 +27,42 @@ class ChessPiece {
   
   ChessPiece(char pt, float xpos, float ypos,float s, int bitBI){
     imageMode(CENTER);
-    wp = loadImage("wp.png");
-    wr = loadImage("wr.png");
-    wn = loadImage("wn.png");
-    wb = loadImage("wb.png");
-    wk = loadImage("wk.png");
-    wq = loadImage("wq.png");
-    bp = loadImage("bp.png");
-    br = loadImage("br.png");
-    bn = loadImage("bn.png");
-    bb = loadImage("bb.png");
-    bq = loadImage("bq.png");
-    bk = loadImage("bk.png");
+    if(which_side == 'r') {
+      int pick = ceil(random(2));
+      if(pick == 1) {
+        which_side = 'b';
+      }else{
+        which_side = 'w';
+      }
+    }
+    if(which_side == 'w'){
+      wp = loadImage("wp.png");
+      wr = loadImage("wr.png");
+      wn = loadImage("wn.png");
+      wb = loadImage("wb.png");
+      wk = loadImage("wk.png");
+      wq = loadImage("wq.png");
+      bp = loadImage("bp.png");
+      br = loadImage("br.png");
+      bn = loadImage("bn.png");
+      bb = loadImage("bb.png");
+      bq = loadImage("bq.png");
+      bk = loadImage("bk.png");
+    }else{
+      bp = loadImage("wp.png");
+      br = loadImage("wr.png");
+      bn = loadImage("wn.png");
+      bb = loadImage("wb.png");
+      bk = loadImage("wk.png");
+      bq = loadImage("wq.png");
+      
+      wp = loadImage("bp.png");
+      wr = loadImage("br.png");
+      wn = loadImage("bn.png");
+      wb = loadImage("bb.png");
+      wq = loadImage("bq.png");
+      wk = loadImage("bk.png");
+    }
     
     wp.resize(pieceSize, pieceSize);
     wr.resize(pieceSize, pieceSize);
@@ -150,8 +172,8 @@ void updateBB() {
      }
     }
     println(" ");
-    print("base64 string: ");
-    println(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState)); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
+    //print("base64 string: ");
+    //println(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState)); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
 }
   
   void highlightLegal() {

@@ -13,8 +13,7 @@ import java.io.*;
   -Say
       * Sends a string to the engine using process builder io streams
   
-  Written by: Christian Brazeau
-  Other Contributers:
+  Written by: Christian Brazeau, Timothy Reichert, and Peter Taranto
   Last modified: 03/12/2021
 */
 
@@ -80,20 +79,22 @@ class Engine {
   String listen() {
     reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
     int i;
-    String returnString = "";
+    String returnString = " ";
+    
     try{
-      while(( i = reader.read()) != 10) {
+      while(( i = reader.read()) != 13) {
+        print(i, " ");
         if( i > 0) {
           returnString += (char) i;
         }
       }
-      println(returnString);
+      
     }catch(Exception e) {
       e.printStackTrace();
       println("failed to read");
     }
-    
-    if(returnString != null) {
+    println(returnString);
+    if(returnString != " ") {
       return returnString;
     }else{
        return null; 
@@ -101,5 +102,55 @@ class Engine {
     
   }
   
+  String listen2() {
+ 
+  // gui gets from engine
+ 
+  int c;
+  String inputStr = "";
+  char stop1 = (char) char(13); 
+ 
+  try {
+ 
+    // http : // stackoverflow.com/questions/22563986/understanding-getinputstream-and-getoutputstream
+ 
+    // while ((c=in.read()) != -1)
+    while ((c=in.read()) != 13)
+    {
+      //  print((char) c);
+      inputStr += (char) c;
+    }
+ 
+    // println (inputStr);
+  }
+  catch (Exception e) {
+    println("Can't read");
+  }
+ 
+  if (inputStr != null && !inputStr.equals("")) {
+    return inputStr ;
+  } else {
+    println("inputStr is null");
+    return null;
+  }
+}
+  
+  void send_config() {
+    String stringToSend;
+    stringToSend = "setoption name UCI_Elo value " + str(cpu_diff);
+    this.listen();
+    delay(20);
+    this.say(stringToSend);
+    delay(20);
+    this.say("isready");
+    delay(20);
+    this.listen();
+    delay(20);
+    this.say("ucinewgame");
+    delay(20);
+    this.say("d");
+    delay(20);
+    this.listen();
+  }
   
 }// end of class
