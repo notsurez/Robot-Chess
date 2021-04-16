@@ -73,8 +73,6 @@ void setup() {
 }
 
 void draw() {  
-  String inputStr = "";
-  inputStr = stockfish.listen2();
   
   switch(game_state){
   //Start Menu
@@ -90,6 +88,7 @@ void draw() {
     drawPieces();
     exampleCPUAnal();
     keepTime();
+    stockfish.drawfunc();
   break;
   default:
   }
@@ -225,7 +224,7 @@ void mousePressed() {
   // If the start menu is pressed, advance the game menu.
  if(start_button.MouseIsOver() && game_state !=2) {
   game_state = 2; 
-  stockfish.send_config();
+  //stockfish.send_config();
  }
  if(menu_button.MouseIsOver() && game_state !=1) {
   game_state = 1; 
