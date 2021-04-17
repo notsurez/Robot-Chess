@@ -239,12 +239,13 @@ class Engine {
  
     // http : // stackoverflow.com/questions/22563986/understanding-getinputstream-and-getoutputstream
  
-    while (c != 13)
+    do
     {
       c=in.read();
       //  print((char) c);
       inputStr += (char) c;
     }
+    while (c != 13);
  
     // println (inputStr);
   }
@@ -260,22 +261,107 @@ class Engine {
   }
 }
   
-  void send_config() {
-    String stringToSend;
-    stringToSend = "setoption name UCI_Elo value " + str(cpu_diff);
-    this.listen();
-    delay(20);
-    this.say(stringToSend);
-    delay(20);
-    this.say("isready");
-    delay(20);
-    this.listen();
-    delay(20);
-    this.say("ucinewgame");
-    delay(20);
-    this.say("d");
-    delay(20);
-    this.listen();
+  boolean send_config() {
+    String inputStr = "";
+    inputStr = listen();
+    //println(inputStr);
+    if (inputStr!=null) {
+      print(inputStr);
+   
+      switch (lineToSay) {
+   
+      case -1:
+        lineToSay++;
+        guiHasToSaySomething=true; 
+        break; 
+   
+      case 0:
+        // say( "uci\n"); // with \n  !!!!!
+        if (inputStr.equals("uciok")||inputStr.contains("uciok")) {
+          lineToSay++;        
+          guiHasToSaySomething=true;
+          //  println ("Here 2");
+        }
+        break;
+   
+      case 1:    
+        //say( "isready\n");
+        inputStr=inputStr.trim();
+        if (inputStr.equals("readyok")||inputStr.contains("readyok")) {
+          lineToSay ++;
+          //  lineToSay ++;
+          guiHasToSaySomething=true;
+          println ("Here 1");
+        }
+        break;
+   
+   
+      case 2:
+      case 3:
+        // say( "debug off\n"); 
+        if (inputStr.equals("readyok")||inputStr.contains("readyok")) {
+          guiHasToSaySomething=true;
+          println ("  Here 2 " + lineToSay);
+          lineToSay ++;
+        }
+        //lineToSay ++;
+        //guiHasToSaySomething=true;
+   
+        break ; 
+   
+      default:
+        println ("Here default " + lineToSay);
+        delay(111); 
+        return false;
+      } // switch
+    } // if
+    else {
+      delay(111); 
+      lineToSay ++;
+      println("STUCK IN ELSE");
+      guiHasToSaySomething=true;
+    }
+   
+    // --------------------------------------------
+   
+    if (guiHasToSaySomething) {
+      switch (lineToSay) {
+      case 0:
+        say( "uci\n"); // with \n  !!!!!
+        break;
+   
+      case 1:    
+        say( "isready\n");
+        break;
+   
+      case 2:
+        guiHasToSaySomething=true;
+        // say( "debug off\n"); 
+        say( "isready\n");
+        break;
+   
+      case 3:    
+        guiHasToSaySomething=true;
+        //  say( "ucinewgame\n");
+        say( "isready\n");
+        break; 
+   
+      case 4: 
+        // now the GUI sets some values in the engine
+        // set hash to 32 MB
+        //   guiHasToSaySomething=true;
+        say("setoption name UCI_Elo value " + str(cpu_diff) + " \n"); 
+        guiHasToSaySomething=true;
+      default:
+        println ("Config info sent");
+        return false;
+      } // switch
+      //
+    }
+   
+    //println ("Here sendConfig() " + lineToSay);
+    return true;
+  //
   }
   
 }// end of class

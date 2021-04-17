@@ -19,7 +19,7 @@ Button black, white, random;
 
 //setup variables
 char which_side = 'r';
-int cpu_diff = 800;
+int cpu_diff = 1350;
 int player_time = 900;
 int computer_time = 900;
 boolean show_analysis = true;
@@ -88,9 +88,9 @@ void draw() {
     drawPieces();
     exampleCPUAnal();
     keepTime();
-    println("running drawfun");
-    stockfish.drawfunc();
-    println("made it out alive");
+    //println("running drawfun");
+    //stockfish.drawfunc();
+    //println("made it out alive");
   break;
   default:
   }
@@ -226,7 +226,7 @@ void mousePressed() {
   // If the start menu is pressed, advance the game menu.
  if(start_button.MouseIsOver() && game_state !=2) {
   game_state = 2; 
-  //stockfish.send_config();
+  while(stockfish.send_config()){}
  }
  if(menu_button.MouseIsOver() && game_state !=1) {
   game_state = 1; 
