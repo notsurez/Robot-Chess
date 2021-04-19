@@ -1,7 +1,9 @@
 Serial microPC;
+boolean board_connected = false;
 
 void uCPUinit(int which_cpu) {
   microPC = new Serial(this, Serial.list()[which_cpu], 115200);
+  board_connected = true;
 }
 
 char[] toBase64(byte[] bb, boolean castling, boolean castling_side, int timeString, char turnString) {
@@ -24,11 +26,27 @@ char[] toBase64(byte[] bb, boolean castling, boolean castling_side, int timeStri
        temp += 1;
     }
   charArr[i] = temp;
-  microPC.write(temp);
+  if(board_connected){
+    microPC.write(temp);
+  }
   }
   
-  microPC.write(timeString);
-  microPC.write(turnString);
+  if(board_connected){
+    microPC.write(timeString);
+    microPC.write(turnString);
+  }
   
   return charArr;
+}
+
+long m = 0;
+void keepTime() {
+ if(millis() - m >= 1000) {
+   if(turnState == 'P') {
+     player_time--;
+   }else {
+    computer_time--; 
+   }
+  m = millis(); 
+ }
 }

@@ -2,9 +2,7 @@
   Class for the chess piece object. The object will contain all the information used to display each chess piece
   determine legal moves, and allow the user to select pieces
   
-  Written by: Christian Brazeau
-  Other Contributers: 
-    Timothy Reichert (legal move logic)
+  Written by: Christian Brazeau, Timothy Reichert, and Peter Taranto
   Last modified: 03/12/2021
 */
 
@@ -16,6 +14,8 @@ import java.util.BitSet;
   
   boolean wqsc = true;
   boolean wksc = true;
+  
+  boolean heardBestmove = false;
   
 class ChessPiece {
   
@@ -29,18 +29,41 @@ class ChessPiece {
   
   ChessPiece(char pt, float xpos, float ypos,float s, int bitBI){
     imageMode(CENTER);
-    wp = loadImage("wp.png");
-    wr = loadImage("wr.png");
-    wn = loadImage("wn.png");
-    wb = loadImage("wb.png");
-    wk = loadImage("wk.png");
-    wq = loadImage("wq.png");
-    bp = loadImage("bp.png");
-    br = loadImage("br.png");
-    bn = loadImage("bn.png");
-    bb = loadImage("bb.png");
-    bq = loadImage("bq.png");
-    bk = loadImage("bk.png");
+    if(which_side == 'r') {
+      int pick = ceil(random(2));
+      if(pick == 1) {
+        which_side = 'b';
+      }else{
+        which_side = 'w';
+      }
+    }
+    if(which_side == 'w'){
+      wp = loadImage("wp.png");
+      wr = loadImage("wr.png");
+      wn = loadImage("wn.png");
+      wb = loadImage("wb.png");
+      wk = loadImage("wk.png");
+      wq = loadImage("wq.png");
+      bp = loadImage("bp.png");
+      br = loadImage("br.png");
+      bn = loadImage("bn.png");
+      bb = loadImage("bb.png");
+      bq = loadImage("bq.png");
+      bk = loadImage("bk.png");
+    }else{
+      bp = loadImage("wp.png");
+      br = loadImage("wr.png");
+      bn = loadImage("wn.png");
+      bb = loadImage("wb.png");
+      bk = loadImage("wk.png");
+      bq = loadImage("wq.png");
+      wp = loadImage("bp.png");
+      wr = loadImage("br.png");
+      wn = loadImage("bn.png");
+      wb = loadImage("bb.png");
+      wq = loadImage("bq.png");
+      wk = loadImage("bk.png");
+    }
     
     wp.resize(pieceSize, pieceSize);
     wr.resize(pieceSize, pieceSize);
@@ -124,9 +147,10 @@ class ChessPiece {
   }
   
 void updateBB() {
-    BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
     int TobbIndex = (int) floor(x/(int)gridSize)+floor(y/(int)gridSize)*8; //Calculate new BB position
 
+addMove(bbIndex, TobbIndex, true);
+BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
 
     println(BitBoard[bbIndex]); // Print which 
 
@@ -136,22 +160,21 @@ void updateBB() {
       println("PIECE REMOVED ", (char)BitBoard[TobbIndex], " on (", TobbIndex%8, ",",floor(TobbIndex/8), ")"  );
     }
 
-
     bbIndex = TobbIndex;
     BitBoard[bbIndex] = (byte)pieceType;
     println("UPDATE:", bbIndex, "=", pieceType);
 
     // Print BitBoard for debugging
-    println("Print BitBoard for debugging");
-    for(int i = 0; i < 64; i++) {
-     print((char)BitBoard[i]);
-     if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
-       println();
-     }
-    }
-    println(" ");
-    print("base64 string: ");
-    println(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState)); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
+//    println("Print BitBoard for debugging");
+//    for(int i = 0; i < 64; i++) {
+//     print((char)BitBoard[i]);
+//     if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
+//       println();
+//     }
+//    }
+//    println(" ");
+    //print("base64 string: ");
+    //println(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState)); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
 }
   
   void highlightLegal() {
@@ -164,9 +187,15 @@ void updateBB() {
           ellipse(gridSize/2 + (i%8)*(gridSize),gridSize/2 + (floor(i/8))*(gridSize),gridSize/4,gridSize/4);
         }
       }
+
+      blockedup = false;
+      blockeddown = false;
+      blockedleft = false;
+      blockedright = false;
     }
   }
   
+  boolean blockedup = false, blockeddown = false, blockedleft = false, blockedright = false;
   //Tim, put your logic in here
   boolean isLegal(int From, int To){
     boolean IsitLegal = false;
@@ -189,113 +218,130 @@ void updateBB() {
       if(From >= 8 && From < 16){ //Condition for testing if the pawn is on the 2nd rank and can move two squares
         if(To-From == 16 || To-From == 8){
           IsitLegal = true;
+           if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+          return false;
+          }
         }
       }
                 
       if(To-From == 8){ //Condition for testing if the pawn is moving one square
         IsitLegal = true;
+         if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+          return false;
+        }
             }
-          
-      if(BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] =='k'||BitBoard[To] == 'p'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
-        return false;
-      }
       if((To-From == 7||To-From == 9) && (BitBoard[To] == 'P'||BitBoard[To] =='Q'||BitBoard[To] =='B'||BitBoard[To] == 'N'||BitBoard[To] == 'R')){ // Condition to test if the pawn is making a capture
         IsitLegal = true;
       }
 
       if(To > 63|| To < 0){ //returns false if move is off the board
         return false;
-        }
-      
+        } 
       break;
       
       case 'r': //Black Rook
-     if(y_2 == y_1|| x_2 == x_1){
-       IsitLegal = true;
+     if((x_2 == x_1&&(y_2 < y_1)&&(To != From)&&blockedup == false)){
+         IsitLegal = true;
+       if((BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] =='k'||BitBoard[To] == 'p')){
+         blockedup = true;
+         IsitLegal = false;
+       }
      }
-        if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
-          return false;
-        }
-        if(BitBoard[To] == 'P'||BitBoard[To] =='Q'||BitBoard[To] =='B'||BitBoard[To] == 'N'||BitBoard[To] == 'R'){
-          IsitLegal = true;
-        }
+     if((x_2 == x_1&&(y_2 > y_1)&&(To != From)&&blockeddown == false)){
+         IsitLegal = true;
+       if((BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] =='k'||BitBoard[To] == 'p')){
+         blockeddown = true;
+         IsitLegal = false;
+       }
+     }
+     if((y_2 == y_1&&(x_2 < x_1)&&(To != From)&&blockedleft == false)){
+         IsitLegal = true;
+       if((BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] =='k'||BitBoard[To] == 'p')){
+         blockedleft = true;
+         IsitLegal = false;
+       }
+     }
+     if((y_2 == y_1&&(x_2 > x_1)&&(To != From)&&blockedright == false)){
+       IsitLegal = true;
+       if((BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] =='k'||BitBoard[To] == 'p')){
+         blockedright = true;
+         IsitLegal = false;
+       }
+     }
+     
         if(To > 63 ||To < 0){ //Returns false if the knight is moved off the board
         return false;
-      }
-        
-        
+      }  
       break;
             
       case 'n': //Black Knight
      if((abs(m) == 0.5||abs(m) == 2)&&(d == sqrt(5))){
        IsitLegal = true;
-     }
        if(BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] =='k'||BitBoard[To] == 'p'){ // Condition to test if the knight is trying to move to a square occupied by a friendly piece
         return false;
-      }
-      if(BitBoard[To] == 'P'||BitBoard[To] =='Q'||BitBoard[To] =='B'||BitBoard[To] == 'N'||BitBoard[To] == 'R'){ //Condition to allow a knight to capture if it is trying to move to a square
-        IsitLegal = true;
-      }
+     }
+     }
       if(To > 63 ||To < 0){ //Returns false if the knight is moved off the board
         return false;
-      }
-       
-       
+      }   
       break;      
       
       case 'b': //Black Bishop
 
       if(m == 1 || m == -1){
         IsitLegal = true;
+         if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+          return false;
+        }
       }
        if(To < 0|| To > 63){ //returns false if move is off the board
         return false;
-      }
-        
-       
+      }     
       break;
       
       case 'q': //Black Queen
         if((y_2 == y_1|| m == 0)||(m == 1 || m == -1)){
        IsitLegal = true;
-     }
-       
+        if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+          return false;
+        }
+     }       
       break;
       
       case 'k': //Black King
    if(d == 1||d == sqrt(2)){
         IsitLegal = true;
-      }
-        if(BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] == 'p'||BitBoard[To] == 'k'){  // Condition to test if the king is trying to move to a square occupied by a friendly piece
-         return false;
-      }
-      if(BitBoard[To] == 'P'||BitBoard[To] =='Q'||BitBoard[To] =='B'||BitBoard[To] == 'N'||BitBoard[To] == 'R'){ //Condition to allow the king to capture an enemy piece
-     IsitLegal = true;
+         if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+          return false;
+        }
       }
       if(To > 63 ||To < 0){ //Returns false if the king is moved off the board
         return false;
-      }
-      
-       
-       
+      } 
       break;
       
       case 'P': // White Pawn
         if(From >= 48 && From < 56){//Condition for testing if the pawn is on the 2nd rank and can move two squares
           if(To-From == -16 || To-From == -8){
           IsitLegal = true;
+          if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
+        return false;
+            }
           }
         }
                 
       if(To-From == -8){ //Condition for testing if the pawn is moving one square
         IsitLegal = true;
-            }
-
-      if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
+              if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
         return false;
       }
+            }
+
       if((To-From == -7||To-From == -9) && (BitBoard[To] == 'p'||BitBoard[To] =='q'||BitBoard[To] =='b'||BitBoard[To] == 'n'||BitBoard[To] == 'r')){ // Condition to test if the pawn is making a capture
         IsitLegal = true;
+              if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
+        return false;
+      }
       }
 
       if(To < 0|| To > 63){ //returns false if move is off the board
@@ -307,13 +353,11 @@ void updateBB() {
       case 'R': //White Rook
        if(y_2 == y_1|| x_2 == x_1){
        IsitLegal = true;
+        if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
+        return false;
+      }
      }
-        if(BitBoard[To] == 'P' ||BitBoard[To] == 'R' ||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
-          return false;
-        }
-        if(BitBoard[To] == 'p'||BitBoard[To] =='q'||BitBoard[To] =='b'||BitBoard[To] == 'n'||BitBoard[To] == 'r'){
-          IsitLegal = true;
-        }
+
         if(To > 63 ||To < 0){ //Returns false if the knight is moved off the board
         return false;
       }
@@ -322,23 +366,22 @@ void updateBB() {
       case 'N': //White Knight
      if((abs(m) == 0.5||abs(m) == 2)&&(d == sqrt(5))){
        IsitLegal = true;
+             if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
+        return false;
+      }
      }
      
-       if(BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] == 'p'){ //Condition to allow a knight to capture if it is trying to move to a square
-         IsitLegal = true;
-      }
-      if(BitBoard[To] == 'P'||BitBoard[To] =='Q'||BitBoard[To] =='B'||BitBoard[To] == 'N'||BitBoard[To] == 'R'||BitBoard[To] == 'K'){ // Condition to test if the knight is trying to move to a square occupied by a friendly piece
-       return false;
-      }
       if(To > 63 ||To < 0){ //Returns false if the knight is moved off the board
         return false;
       }
-        
       break;      
       
       case 'B': //White Bishop// 
       if(m == 1 || m == -1){
         IsitLegal = true;
+              if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
+        return false;
+      }
       }
        if(To < 0|| To > 63){ //returns false if move is off the board
         return false;
@@ -348,35 +391,26 @@ void updateBB() {
       case 'Q': //White Queen
         if((y_2 == y_1|| m == 0)||(m == 1 || m == -1)){
        IsitLegal = true;
+             if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
+        return false;
+      }
      }
-        
       break;
-      
       case 'K': //White King
       if(d == 1||d == sqrt(2)){
         IsitLegal = true;
+              if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
+        return false;
       }
-        if(BitBoard[To] == 'r' ||BitBoard[To] =='n'||BitBoard[To] == 'b'||BitBoard[To] =='q'||BitBoard[To] == 'p'){ //Condition to allow a king to capture if it is trying to move to a square
-         IsitLegal = true;
-      }
-      if(BitBoard[To] == 'P'||BitBoard[To] =='Q'||BitBoard[To] =='B'||BitBoard[To] == 'N'||BitBoard[To] == 'R'||BitBoard[To]== 'K'){ // Condition to test if the king is trying to move to a square occupied by a friendly piece
-       return false;
       }
       if(To > 63 ||To < 0){ //Returns false if the king is moved off the board
         return false;
-      }
-      
-      
-        
+      } 
       break;
-      
       }
-    
     return IsitLegal;
   }
-  
 
-  
   boolean MouseIsOver() {
     if (mouseX > x-(size/2) && mouseX < x+(size/2) && mouseY > y-(size/2) && mouseY < y+(size/2)) {
         //println(pieceType, bbIndex);
@@ -384,4 +418,31 @@ void updateBB() {
     }
     return false;
   }
+}
+
+void addMove(int fromLocation, int toLocation, boolean tellStockfish) {
+  heardBestmove = false;
+  if (fromLocation == toLocation) return;
+  //if (turnState == 'P') movesHistory = movesHistory + "\n"; //P for white/player, p for black/computer
+  movesHistory = movesHistory + bbCoordString(fromLocation) + bbCoordString(toLocation) + " ";
+  
+  if (tellStockfish) {
+  stockfish.say(movesHistory);
+  delay(20);
+  stockfish.say("go movetime 1000"); //replace the 1000 with the amount of time to run engine in millis
+  delay(2000);
+  while(!heardBestmove) {
+  stockfish.listen();
+  delay(20);
+  }
+}
+}
+
+String bbCoordString(int Location) {
+String buffer = "";
+int alpha = 97 + (Location % 8);
+char alphaChar = (char) alpha;
+int numeric = 8 - (Location / 8);
+buffer = buffer + str(alphaChar) + str(numeric);
+return buffer;  
 }
