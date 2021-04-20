@@ -15,6 +15,8 @@ import java.util.BitSet;
   boolean wqsc = true;
   boolean wksc = true;
   
+  boolean heardBestmove = false;
+  
 class ChessPiece {
   
   PImage wp, wr, wn, wb, wq, wk, bp, br, bn, bb, bq, bk; //Initialize individual PImages for each piece
@@ -27,7 +29,7 @@ class ChessPiece {
   
   ChessPiece(char pt, float xpos, float ypos,float s, int bitBI){
     imageMode(CENTER);
-    if(which_side == 'r') {
+    if((which_side == 'r')) {
       int pick = ceil(random(2));
       if(pick == 1) {
         which_side = 'b';
@@ -145,8 +147,11 @@ class ChessPiece {
   }
   
 void updateBB() {
-    BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
+  println("UPDATING BB");
     int TobbIndex = (int) floor(x/(int)gridSize)+floor(y/(int)gridSize)*8; //Calculate new BB position
+
+    
+    BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
 
     println(BitBoard[bbIndex]); // Print which 
 
@@ -171,15 +176,17 @@ void updateBB() {
     println(" ");
     //print("base64 string: ");
     //println(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState)); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
+    
+    //addMove(bbIndex, TobbIndex, true);
 }
   
   void highlightLegal() {
     if(selected){
-      println(pieceType, " on ",bbIndex);
+      //println(pieceType, " on ",bbIndex);
       for(int i = 0; i < 64; i++) {
         if(isLegal(bbIndex,i)){
           fill(40, 40, 80);
-          println(bbIndex, " => ", i);
+          //println(bbIndex, " => ", i);
           ellipse(gridSize/2 + (i%8)*(gridSize),gridSize/2 + (floor(i/8))*(gridSize),gridSize/4,gridSize/4);
         }
       }
@@ -414,4 +421,40 @@ void updateBB() {
     }
     return false;
   }
+}
+
+void addMove(int fromLocation, int toLocation, boolean tellStockfish) {
+  heardBestmove = false;
+  if (fromLocation == toLocation) return;
+  //if (turnState == 'P') movesHistory = movesHistory + "\n"; //P for white/player, p for black/computer
+  if (cherry < 50) return;
+  cherry = 0;
+  
+  movesHistory = movesHistory + bbCoordString(fromLocation) + bbCoordString(toLocation) + " ";
+  
+  if (tellStockfish) {
+  stockfish.say(movesHistory);
+  delay(20);
+  stockfish.say("go movetime 1000"); //replace the 1000 with the amount of time to run engine in millis
+  m = millis();
+  for(int t = 1; t < 20; t++) {
+  delay(100);
+  print("=");
+  keepTime();
+  }
+  println(">");
+  while(!heardBestmove) {
+  stockfish.listen();
+  delay(20);
+  }
+}
+}
+
+String bbCoordString(int Location) {
+String buffer = "";
+int alpha = 97 + (Location % 8);
+char alphaChar = (char) alpha;
+int numeric = 8 - (Location / 8);
+buffer = buffer + str(alphaChar) + str(numeric);
+return buffer;  
 }

@@ -5,6 +5,7 @@
   Other Contributers:
   Last modified: 03/12/2021
 */
+
 import processing.serial.*;
 
 Star[] stars;           //initialize array of Star objects (used for start menu)
@@ -19,7 +20,7 @@ Button black, white, random;
 
 //setup variables
 char which_side = 'r';
-int cpu_diff = 800;
+int cpu_diff = 1350;
 int player_time = 900;
 int computer_time = 900;
 boolean show_analysis = true;
@@ -29,13 +30,27 @@ int boardSize = 800;
 float gridSize = boardSize/8;
 int pieceSize = (int)gridSize;
 
+int pressed_x = 0;
+int pressed_y = 0;
+int the_x = 0;
+int the_y = 0;
+
+float cpuAnal = 15;
+float cpuY = 60;
+float cpuX = 870;
+float playerX = 870;
+float playerY = 180;
+
 int game_state = 0; //initialize game state variable used to toggle between (game, menu, endgame, etc)
+
+long cherry = 0;
 
 //A string storing the current board state in FEN notation
 String cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1";
 byte BitBoard[] = new byte[64];
 char turnState = 'P'; //P for white/player, p for black/computer
 
+String movesHistory = "position startpos moves ";
 //long frameCounter = 0;
 
 /*
@@ -60,13 +75,15 @@ void setup() {
   start_button = new Button("Start Game", width/2, height/2, 300, 75, color(255), color(0), 50);
   menu_button = new Button("Setup Game", width/2, height/2+100, 300, 75, color(255), color(0), 50);
   random = new Button("Rand", width/2, 200, 60, 60, color(255), color(0), 20);
+  random.active = true;
   white = new Button("White", width/2-100, 200, 60, 60, color(255), color(0), 20);
   black = new Button("Black", width/2+100, 200, 60, 60, color(0), color(255), 20);
+  
   stockfish = new Engine(path);
   stockfish.init();
   
   board = new ChessPiece[8][8];
-  readFen(cur_fen);
+  
   //drawPieces();
   
   println("Initializing uCPU");
@@ -74,6 +91,14 @@ void setup() {
 }
 
 void draw() {  
+  cherry++;
+  //println((int) floor(mouseX/(int)gridSize)+floor(mouseY/(int)gridSize)*8);
+  //println((mouseX)/100 + 8*((mouseY)/100));
+  //print("mouseX: ");
+  //print(mouseX);
+  //print(" mouseY: ");
+  //println(mouseY);
+  
   switch(game_state){
   //Start Menu
   case 0:
@@ -86,10 +111,11 @@ void draw() {
   case 2:
     drawBoard();
     drawPieces();
-    exampleCPUAnal();
     keepTime();
-    //println("running drawfun");
-    stockfish.drawfunc(); //if (frameCounter % 10 == 0) ...
+    exampleCPUAnal();
+    
+    //println("running drawfunc");
+    //stockfish.drawfunc(); //if (frameCounter % 10 == 0) ...
     //frameCounter++;
     //println("made it out alive");
   break;
@@ -170,6 +196,74 @@ void drawPieces() {
   }
 }
 
+void updatePieces(char newPiece, int bbIndex) {
+  
+  for (int i = 0; i<8; i++){
+    for (int j = 0; j<8; j++) { 
+      if (board[i][j] != null){
+        board[i][j].x=0;
+        board[i][j].y=0;
+      }
+    }
+  }
+  
+        bbIndex = (int) floor(pressed_x/(int)gridSize)+floor(pressed_y/(int)gridSize)*8;
+  int TobbIndex = (int) floor(the_x/(int)gridSize)+floor(the_y/(int)gridSize)*8;
+  
+  if(TobbIndex != ' ') {
+    BitBoard[TobbIndex] = ' ';
+  }
+  
+  BitBoard[bbIndex] = ' ';
+  BitBoard[TobbIndex] = (byte)newPiece;
+  turnState = 'C';
+  addMove(bbIndex, TobbIndex, true);
+  turnState = 'P';
+  
+      // Print BitBoard for debugging
+    println("Print BitBoard for debugging");
+    for(int i = 0; i < 64; i++) {
+     print((char)BitBoard[i]);
+     if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
+       println();
+     }
+    }
+    println(" ");
+  
+  println(movesHistory);
+  
+  for(int i = 0; i<64; i++) {
+      board[i%8][floor(i/8)] = null;
+  }
+  for(int i = 0; i<64; i++) {
+    if(BitBoard[i] != ' ') {
+      board[i%8][floor(i/8)] = new ChessPiece((char)BitBoard[i], (i%8)*gridSize+(gridSize/2), floor(i/8)*gridSize+(gridSize/2), pieceSize, i);
+    }else{
+      board[i%8][floor(i/8)] = null;
+    }
+  }
+  
+  /*
+  int TobbIndex = (int) floor(x/(int)gridSize)+floor(y/(int)gridSize)*8; //Calculate new BB position
+
+    
+    BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
+
+    println(BitBoard[bbIndex]); // Print which 
+
+    if(BitBoard[TobbIndex] != 32 && BitBoard[TobbIndex] != 0) { //if the TO position contains a piece
+      BitBoard[TobbIndex] = ' '; 
+      board[TobbIndex%8][floor(TobbIndex/8)] = null; //Remove the piece object
+      println("PIECE REMOVED ", (char)BitBoard[TobbIndex], " on (", TobbIndex%8, ",",floor(TobbIndex/8), ")"  );
+    }
+
+    bbIndex = TobbIndex;
+    BitBoard[bbIndex] = (byte)pieceType;
+    println("UPDATE:", bbIndex, "=", pieceType);
+    */
+  
+} //end of update pieces
+
 /*
   Function for displaying the start menu
   This is what the user will be greated with when they first launch the program
@@ -188,7 +282,6 @@ void startMenu() {
   text("Robot Chess", width/2, height/4);
   start_button.display();
   menu_button.display();
-  
 }
 
 void setup_menu() {
@@ -210,78 +303,76 @@ void setup_menu() {
 
 //Built in processing function that runs whenever the mouse is clicked.
 void mousePressed() {
+  pressed_x = mouseX;
+  pressed_y = mouseY;
+  
   for (int i = 0; i<8; i++){
     for (int j = 0; j<8; j++) { 
       if (board[i][j] != null){
         if(board[i][j].MouseIsOver()) {
           board[i][j].selected = true;
-        }
-        
+        }    
       }
     }
   }
   // If the start menu is pressed, advance the game menu.
  if(start_button.MouseIsOver() && game_state !=2 ) {
   game_state = 2; 
+  readFen(cur_fen);
   stockfish.send_config();
+   
  }
  if(menu_button.MouseIsOver()  && game_state != 2) {
   game_state = 1; 
  }
- 
+ if(white.MouseIsOver()  && game_state == 1) {
+   which_side = 'w'; 
+  white.active = true; 
+  black.active = false;
+  random.active = false;
+ }
+ if(black.MouseIsOver()  && game_state == 1) {
+  which_side = 'b';
+   white.active = false; 
+  black.active = true;
+  random.active = false;
+ }
+ if(random.MouseIsOver()  && game_state == 1) {
+   which_side = 'r';
+  white.active = false; 
+  black.active = false;
+  random.active = true;
+ }
 } //end of mousePressed
 
 void mouseReleased() {
-    for (int i = 0; i<8; i++){
-    for (int j = 0; j<8; j++) { 
+  the_x = mouseX;
+  the_y = mouseY;
+  
+          int the_new_x = int(int(pressed_x/gridSize)*(gridSize)+gridSize/2);
+          int the_new_y = int(int(pressed_y/gridSize)*(gridSize)+gridSize/2);
+  
+//    for (int i = 0; i < 8; i++){
+//    for (int j = 0; j < 8; j++) { 
+  int i = (the_new_x)/100;
+  int j = (the_new_y)/100;
+  if(i < 8 && j < 8) {
       if (board[i][j] != null){
         if(board[i][j].MouseIsOver() && mouseX < boardSize && mouseY < boardSize) {
           board[i][j].selected = false;
           board[i][j].x = int(mouseX/gridSize)*(gridSize)+gridSize/2;
           board[i][j].y = int(mouseY/gridSize)*(gridSize)+gridSize/2;
-          board[i][j].updateBB();
+          //board[i][j].updateBB();
+          updatePieces((char) BitBoard[i+(8*j)], board[i][j].bbIndex);
+         
         }
       }
-    }
   }
+//    }
+//  }
 }
 
-
 void exampleCPUAnal(){
-  float cpuAnal = 15;
-  float cpuY = 60;
-  float cpuX = 870;
-  float playerY = 180;
-  float playerX = 870;
-  
-  //Black Clock and player
-  textSize(25);
-  fill(220);
-  rect(boardSize, 0, (width-boardSize), (height)); 
-  fill(0);
-  text("Black: CPU (3200)", cpuX, cpuY-5);
-  fill(50);
-  rect(cpuX, cpuY, 200, 50, 10);
-  fill(255);
-  textSize(40);
-  String computer_displayTime = null;
-  if (computer_time%60 > 9)  computer_displayTime = str(computer_time/60) + str(':')  + str(computer_time%60);
-  if (computer_time%60 < 10) computer_displayTime = str(computer_time/60) + ":0" + str(computer_time%60);
-  text(computer_displayTime, cpuX+50, cpuY+40);
-  
-  //White Clock and Player
-  textSize(25);
-  fill(0);
-  text("White: Player (900)", playerX, playerY-5);
-  fill(50);
-  rect(playerX, playerY, 200, 50, 10);
-  fill(255);
-  textSize(40);
-  String player_displayTime = null;
-  if (player_time%60 > 9)  player_displayTime = str(player_time/60) + str(':')  + str(player_time%60);
-  if (player_time%60 < 10) player_displayTime = str(player_time/60) + ":0" + str(player_time%60);
-  text(player_displayTime, playerX+50, playerY+40);
-  
   //Indicator Bar
   fill(0);
   rect(boardSize, 0, 50, cpuAnal);
@@ -291,7 +382,7 @@ void exampleCPUAnal(){
   fill(0);
   text("+M2", boardSize, height/2);
   
-  text("Indication for best moves here", boardSize+ 50, 300);
+  text(movesHistory, boardSize+ 50, 300);
   
   text("Menu Buttons down here", boardSize+50, height-70);
 }
@@ -331,6 +422,8 @@ class Button {
  color c, t;
  String text;
  int ts;
+ boolean active;
+ int ol = 10;
  Button(String txt, float xp, float yp, float wt, float lt, color back_color, color txt_color, int text_size) {
    text = txt;
    x = xp;
@@ -343,6 +436,8 @@ class Button {
  }
  
  void display() {
+   fill(0, 255,0);
+   if(active) rect(x-((w+ol)/2),y-((h+ol)/2),w+ol,h+ol,10);
    fill(c);
    rect(x-(w/2),y-(h/2),w,h,10);
    fill(t);
