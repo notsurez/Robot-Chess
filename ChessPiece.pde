@@ -149,8 +149,8 @@ class ChessPiece {
 void updateBB() {
     int TobbIndex = (int) floor(x/(int)gridSize)+floor(y/(int)gridSize)*8; //Calculate new BB position
 
-addMove(bbIndex, TobbIndex, true);
-BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
+    addMove(bbIndex, TobbIndex, true);
+    BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
 
     println(BitBoard[bbIndex]); // Print which 
 

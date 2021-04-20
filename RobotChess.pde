@@ -176,6 +176,49 @@ void drawPieces() {
   }
 }
 
+void updatePieces(char newPiece, int bbIndex) {
+  
+  int TobbIndex = (int) floor(mouseX/(int)gridSize)+floor(mouseY/(int)gridSize)*8;
+  
+  if(TobbIndex != ' ') {
+    BitBoard[TobbIndex] = ' ';
+  }
+  
+  BitBoard[TobbIndex] = (byte)newPiece;
+  addMove(bbIndex, TobbIndex, true);
+  
+  for(int i = 0; i<64; i++) {
+      board[i%8][floor(i/8)] = null;
+  }
+  for(int i = 0; i<64; i++) {
+    if(BitBoard[i] != ' ') {
+      board[i%8][floor(i/8)] = new ChessPiece((char)BitBoard[i], (i%8)*gridSize+(gridSize/2), floor(i/8)*gridSize+(gridSize/2), pieceSize, i);
+    }else{
+      board[i%8][floor(i/8)] = null;
+    }
+  }
+  
+  /*
+  int TobbIndex = (int) floor(x/(int)gridSize)+floor(y/(int)gridSize)*8; //Calculate new BB position
+
+    
+    BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
+
+    println(BitBoard[bbIndex]); // Print which 
+
+    if(BitBoard[TobbIndex] != 32 && BitBoard[TobbIndex] != 0) { //if the TO position contains a piece
+      BitBoard[TobbIndex] = ' '; 
+      board[TobbIndex%8][floor(TobbIndex/8)] = null; //Remove the piece object
+      println("PIECE REMOVED ", (char)BitBoard[TobbIndex], " on (", TobbIndex%8, ",",floor(TobbIndex/8), ")"  );
+    }
+
+    bbIndex = TobbIndex;
+    BitBoard[bbIndex] = (byte)pieceType;
+    println("UPDATE:", bbIndex, "=", pieceType);
+    */
+  
+} //end of update pieces
+
 /*
   Function for displaying the start menu
   This is what the user will be greated with when they first launch the program
@@ -245,7 +288,8 @@ void mouseReleased() {
           board[i][j].selected = false;
           board[i][j].x = int(mouseX/gridSize)*(gridSize)+gridSize/2;
           board[i][j].y = int(mouseY/gridSize)*(gridSize)+gridSize/2;
-          board[i][j].updateBB();
+          //board[i][j].updateBB();
+          updatePieces(board[i][j].pieceType, board[i][j].bbIndex);
         }
       }
     }

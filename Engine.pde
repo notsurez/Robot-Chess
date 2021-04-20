@@ -147,17 +147,17 @@ String listen() {
       println("Computer PIECE REMOVED ", (char)BitBoard[toPos], " on (", toPos%8, ",",floor(toPos/8), ")"  );
     }
 
-movesHistory = movesHistory + bbCoordString(fromPos) + bbCoordString(toPos) + " ";
+    movesHistory = movesHistory + bbCoordString(fromPos) + bbCoordString(toPos) + " ";
 
     fromPos = toPos;
     BitBoard[fromPos] = oldPiece;
     
-    board[fromChar][8 - fromInt].selected = true;
-    board[fromChar][8 - fromInt].x = 50 + 100*toChar;
-    board[fromChar][8 - fromInt].y = 50 + 100*(8 - toInt);
-    board[fromChar][8 - fromInt].selected = false;
-    board[toChar][8 - toInt] = board[fromChar][8 - fromInt];    
-    board[fromChar][8 - fromInt] = null;      
+    //board[fromChar][8 - fromInt].selected = true;
+    //board[fromChar][8 - fromInt].x = 50 + 100*toChar;
+    //board[fromChar][8 - fromInt].y = 50 + 100*(8 - toInt);
+    //board[fromChar][8 - fromInt].selected = false;
+    //board[toChar][8 - toInt] = board[fromChar][8 - fromInt];    
+    //board[fromChar][8 - fromInt] = null;      
           
       }
     }
