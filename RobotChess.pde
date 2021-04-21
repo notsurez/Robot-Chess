@@ -16,10 +16,10 @@ String path = "C:\\Users\\cwbra\\Documents\\Stockfish\\stockfish_20090216_x64_bm
 //Initialize button objects (I will add more buttons when we start making menus)
 Button start_button; 
 Button menu_button;
-Button black, white, random;
+Button black, white, random, diff_slider;
 
 //setup variables
-char which_side = 'r';
+char which_side = 'w';
 int cpu_diff = 1350;
 int player_time = 900;
 int computer_time = 900;
@@ -74,10 +74,12 @@ void setup() {
   //initialize all buttons
   start_button = new Button("Start Game", width/2, height/2, 300, 75, color(255), color(0), 50);
   menu_button = new Button("Setup Game", width/2, height/2+100, 300, 75, color(255), color(0), 50);
-  random = new Button("Rand", width/2, 200, 60, 60, color(255), color(0), 20);
+  random = new Button("Rand", width/2, 150, 60, 60, color(255), color(0), 20);
   random.active = true;
-  white = new Button("White", width/2-100, 200, 60, 60, color(255), color(0), 20);
-  black = new Button("Black", width/2+100, 200, 60, 60, color(0), color(255), 20);
+  white = new Button("White", width/2-150, 150, 60, 60, color(255), color(0), 20);
+  black = new Button("Black", width/2+150, 150, 60, 60, color(0), color(255), 20);
+  
+  diff_slider = new Button(" ", width/2, 300, 30, 50, color(40), color(0), 20);
   
   stockfish = new Engine(path);
   stockfish.init();
@@ -243,25 +245,6 @@ void updatePieces(char newPiece, int bbIndex) {
     }
   }
   
-  /*
-  int TobbIndex = (int) floor(x/(int)gridSize)+floor(y/(int)gridSize)*8; //Calculate new BB position
-
-    
-    BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
-
-    println(BitBoard[bbIndex]); // Print which 
-
-    if(BitBoard[TobbIndex] != 32 && BitBoard[TobbIndex] != 0) { //if the TO position contains a piece
-      BitBoard[TobbIndex] = ' '; 
-      board[TobbIndex%8][floor(TobbIndex/8)] = null; //Remove the piece object
-      println("PIECE REMOVED ", (char)BitBoard[TobbIndex], " on (", TobbIndex%8, ",",floor(TobbIndex/8), ")"  );
-    }
-
-    bbIndex = TobbIndex;
-    BitBoard[bbIndex] = (byte)pieceType;
-    println("UPDATE:", bbIndex, "=", pieceType);
-    */
-  
 } //end of update pieces
 
 /*
@@ -286,6 +269,7 @@ void startMenu() {
 
 void setup_menu() {
   background(0);
+  noStroke();
   for(int i = 0; i < stars.length;i++){
     stars[i].move();
     stars[i].display();
@@ -293,10 +277,26 @@ void setup_menu() {
   //card
   fill(100);
   rect(width/2 - width/4, 50, width/2, height-100, 20);
-  
+  textAlign(CENTER,CENTER);
+  fill(0);
+  text("Choose player side", width/2, 75);
   white.display();
   random.display();
   black.display();
+  
+  if(diff_slider.active && mouseX < (width/2+250) && mouseX > width/2-250){
+     diff_slider.x = mouseX;
+     cpu_diff = (int)map(diff_slider.x, width/2-250, width/2+250, 1350, 2800);
+  }
+  fill(0);
+  textAlign(CENTER,CENTER);
+  text("CPU DIFFICULTY: " + cpu_diff, width/2, 250);
+  fill(255,0,255);
+  rect(width/2-250, 275, diff_slider.x-(width/2-250), 50, 10);
+  fill(255);
+  rect(diff_slider.x, 275, width/2+250-diff_slider.x, 50, 10);
+  diff_slider.display();
+  
   
   start_button.display();
 }
@@ -343,15 +343,17 @@ void mousePressed() {
   black.active = false;
   random.active = true;
  }
+ if(diff_slider.MouseIsOver() && game_state == 1) {
+   diff_slider.active = true;
+ }
 } //end of mousePressed
 
 void mouseReleased() {
   the_x = mouseX;
   the_y = mouseY;
-  
           int the_new_x = int(int(pressed_x/gridSize)*(gridSize)+gridSize/2);
           int the_new_y = int(int(pressed_y/gridSize)*(gridSize)+gridSize/2);
-  
+  diff_slider.active = false;
 //    for (int i = 0; i < 8; i++){
 //    for (int j = 0; j < 8; j++) { 
   int i = (the_new_x)/100;
