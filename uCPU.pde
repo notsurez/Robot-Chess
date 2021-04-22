@@ -2,8 +2,10 @@ Serial microPC;
 boolean board_connected = false;
 
 void uCPUinit(int which_cpu) {
-  microPC = new Serial(this, Serial.list()[which_cpu], 115200);
+  print("Initializing uCPU on COM port ");
+  microPC = new Serial(this, Serial.list()[which_cpu], 57600);
   board_connected = true;
+  println(which_cpu);
 }
 
 char[] toBase64(byte[] bb, boolean castling, boolean castling_side, int timeString, char turnString) {
@@ -26,16 +28,24 @@ char[] toBase64(byte[] bb, boolean castling, boolean castling_side, int timeStri
        temp += 1;
     }
   charArr[i] = temp;
-  if(board_connected){
+  if (board_connected) {
     microPC.write(temp);
   }
   }
   
-  if(board_connected){
-    microPC.write(timeString);
+  if ( board_connected) {
+    String tempString = str(timeString);
+    microPC.write(tempString);
     microPC.write(turnString);
+    delay(800); //wait for uCPU to process incoming commands
+  }
+  if (!board_connected) {
+    print(timeString);
+    println(turnString);
+    //delay(800); //wait for uCPU to process incoming commands
   }
   
+  castling_occured = false;
   return charArr;
 }
 

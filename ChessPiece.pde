@@ -29,7 +29,7 @@ class ChessPiece {
   
   ChessPiece(char pt, float xpos, float ypos,float s, int bitBI){
     imageMode(CENTER);
-    if((which_side == 'r')) {
+    if(which_side == 'r') {
       int pick = ceil(random(2));
       if(pick == 1) {
         which_side = 'b';
@@ -433,11 +433,11 @@ void addMove(int fromLocation, int toLocation, boolean tellStockfish) {
   movesHistory = movesHistory + bbCoordString(fromLocation) + bbCoordString(toLocation) + " ";
   
   if (tellStockfish) {
-  stockfish.say(movesHistory);
+  stockfish.say("position fen " + cur_fen + movesHistory);
   delay(20);
   stockfish.say("go movetime 1000"); //replace the 1000 with the amount of time to run engine in millis
   m = millis();
-  for(int t = 1; t < 30; t++) {
+  for(int t = 1; t < 20; t++) {
   delay(100);
   print("=");
   keepTime();

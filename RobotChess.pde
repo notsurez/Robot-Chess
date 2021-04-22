@@ -20,7 +20,7 @@ Button black, white, random, diff_slider;
 
 //setup variables
 char which_side = 'w';
-int cpu_diff = 1350;
+int cpu_diff = 1600;
 int player_time = 900;
 int computer_time = 900;
 boolean show_analysis = true;
@@ -28,7 +28,6 @@ boolean show_analysis = true;
 //Global variables for the size of different elements in the GUI, I should have made this dynamic
 int boardSize = 800;
 float gridSize = boardSize/8;
-
 int pieceSize = (int)gridSize;
 
 int pressed_x = 0;
@@ -36,7 +35,11 @@ int pressed_y = 0;
 int the_x = 0;
 int the_y = 0;
 
-float cpuAnal = -300;
+int cpuAnal = 0; //centipawns or number of moves until forced mate
+boolean forced_mate = false;
+boolean game_gg = false;
+float bar_pos = 400;
+
 float cpuY = 60;
 float cpuX = 870;
 float playerX = 870;
@@ -51,14 +54,16 @@ String cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1";
 byte BitBoard[] = new byte[64];
 char turnState = 'P'; //P for white/player, p for black/computer
 
-String movesHistory = "position startpos moves ";
+String movesHistory = " moves ";
 //long frameCounter = 0;
+
+boolean castling_occured = false;
+boolean castline_side = false;      //false = queenside, true = kingside
 
 /*
   setup is a 
 */
-void setup() {
-  
+void setup() { 
   for(int i = 0; i < 64; i++) BitBoard[i] = ' ';
   
   size(1200,800);
@@ -86,11 +91,10 @@ void setup() {
   stockfish.init();
   
   board = new ChessPiece[8][8];
-  
+  //readFen(cur_fen);
   //drawPieces();
   
-  println("Initializing uCPU");
-  //uCPUinit(1); //use the 2nd COM port
+  //uCPUinit(0); //use the 2nd COM port
 }
 
 void draw() {  
@@ -235,6 +239,9 @@ void updatePieces(char newPiece, int bbIndex) {
   
   println(movesHistory);
   
+  print("Emulated serial communications --> ");
+  println(str(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
+  
   for(int i = 0; i<64; i++) {
       board[i%8][floor(i/8)] = null;
   }
@@ -245,6 +252,25 @@ void updatePieces(char newPiece, int bbIndex) {
       board[i%8][floor(i/8)] = null;
     }
   }
+  
+  /*
+  int TobbIndex = (int) floor(x/(int)gridSize)+floor(y/(int)gridSize)*8; //Calculate new BB position
+
+    
+    BitBoard[bbIndex] = ' '; //Clear where the piece moved FROM
+
+    println(BitBoard[bbIndex]); // Print which 
+
+    if(BitBoard[TobbIndex] != 32 && BitBoard[TobbIndex] != 0) { //if the TO position contains a piece
+      BitBoard[TobbIndex] = ' '; 
+      board[TobbIndex%8][floor(TobbIndex/8)] = null; //Remove the piece object
+      println("PIECE REMOVED ", (char)BitBoard[TobbIndex], " on (", TobbIndex%8, ",",floor(TobbIndex/8), ")"  );
+    }
+
+    bbIndex = TobbIndex;
+    BitBoard[bbIndex] = (byte)pieceType;
+    println("UPDATE:", bbIndex, "=", pieceType);
+    */
   
 } //end of update pieces
 
@@ -347,63 +373,85 @@ void mousePressed() {
  if(diff_slider.MouseIsOver() && game_state == 1) {
    diff_slider.active = true;
  }
+ 
 } //end of mousePressed
 
 void mouseReleased() {
   the_x = mouseX;
   the_y = mouseY;
+  
           int the_new_x = int(int(pressed_x/gridSize)*(gridSize)+gridSize/2);
           int the_new_y = int(int(pressed_y/gridSize)*(gridSize)+gridSize/2);
+  
   diff_slider.active = false;
+    
 //    for (int i = 0; i < 8; i++){
 //    for (int j = 0; j < 8; j++) { 
   int i = (the_new_x)/100;
   int j = (the_new_y)/100;
-  if(i < 8 && j < 8) {
+  
+  if (i > 7 || j > 7) println("Overflow error!"); //this should never happen
+  
+    if (i < 8 && j < 8) {
       if (board[i][j] != null){
         if(board[i][j].MouseIsOver() && mouseX < boardSize && mouseY < boardSize) {
           board[i][j].selected = false;
           board[i][j].x = int(mouseX/gridSize)*(gridSize)+gridSize/2;
           board[i][j].y = int(mouseY/gridSize)*(gridSize)+gridSize/2;
           //board[i][j].updateBB();
+
           updatePieces((char) BitBoard[i+(8*j)], board[i][j].bbIndex);
-         
         }
       }
-  }
+    }
 //    }
 //  }
 }
 
 void exampleCPUAnal(){
   //Indicator Bar
-  float bar_pos = 0;
   int bound = 2500;
-  bar_pos  = map(cpuAnal, -bound, bound, 20, 780);
+  if (forced_mate == false && game_gg == false) bar_pos = map(cpuAnal, -bound, bound, 20, 780);
   if(cpuAnal > bound){
      bar_pos = 780;
   }else if(cpuAnal < -bound){
      bar_pos =  20;
   }
-  cpuAnal += 4;
+
   fill(0);
-  rect(boardSize, 0, 50, bar_pos);
+  rect(boardSize, 0, 50, bar_pos, 10);
   fill(255);
-  rect(boardSize, bar_pos, 50, height);
+  rect(boardSize, bar_pos, 50, height, 10);
   textSize(13);
   if(bar_pos > height/2-5 ){
     fill(255);
   }else{
       fill(0);
   }
-  if(bar_pos >= 20 && bar_pos <= 780){
-    text(nf(cpuAnal/100, 2, 2), boardSize, height/2);
+
+  if (game_gg == false) {
+  if (forced_mate == false) text(nf((float)cpuAnal/100, 2, 2), boardSize + 5, height/2);
+  if (forced_mate == true && cpuAnal < 0)   {
+    text("-M" + str(abs(cpuAnal)), boardSize + 5, height/2);
+    bar_pos = 0;
   }
-  
+  if (forced_mate == true && cpuAnal > -1)  {
+    text("+M" + str(abs(cpuAnal)), boardSize + 5, height/2);
+    bar_pos = 800;
+  }
+  }
+  if (game_gg == true && turnState == 'P')  {
+    text("0-1", boardSize + 5, height/2);
+    bar_pos = 800;  
+  }
+  if (game_gg == true && turnState == 'C')  {
+    text("1-0", boardSize + 5, height/2);
+    bar_pos = 0;
+  }
   fill(0);
-  text(movesHistory, boardSize+ 50, 300);
+  text(movesHistory, boardSize + 50, 300);
   
-  text("Menu Buttons down here", boardSize+50, height-70);
+  text("Menu Buttons down here", boardSize + 50, height - 70);
 }
 
 //Star class for start menu background

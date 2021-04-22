@@ -105,6 +105,15 @@ String listen() {
   }
 
   if (inputStr != null && !inputStr.equals("")) {
+    if (inputStr.contains("cp")) {
+      cpuAnal = int(inputStr.substring(inputStr.indexOf("cp")+3, inputStr.indexOf("nodes")-1));
+      forced_mate = false;
+    }
+    if (inputStr.contains("mate")) {
+      cpuAnal = int(inputStr.substring(inputStr.indexOf("mate")+5, inputStr.indexOf("nodes")-1));
+      forced_mate = true;
+    }
+    
     heardBestmove = inputStr.contains("bestmove");
     if (heardBestmove) {
       println(inputStr);
@@ -113,6 +122,7 @@ String listen() {
       if ( inputStr.contains("ponder")) moveString = inputStr.substring(10, inputStr.indexOf("ponder")-1);
       if (!inputStr.contains("ponder")) {
         moveString = inputStr.substring(10, 14); //the game is over btw
+        game_gg = true;
       println("GG");
       delay(10000);
       }
@@ -137,6 +147,26 @@ String listen() {
         print("-->");
         println(toPos);
         
+        if (BitBoard[fromPos] == 'K' && toPos-fromPos ==  2) { //kingside  castle white
+          BitBoard[61] = 'R';
+          BitBoard[63] = ' ';
+        }
+        if (BitBoard[fromPos] == 'K' && toPos-fromPos == -2) { //queenside castle white
+          BitBoard[59] = 'R';
+          BitBoard[56] = ' ';
+        }
+        if (BitBoard[fromPos] == 'k' && toPos-fromPos ==  2) { //kingside  castle black
+          BitBoard[5]  = 'r';
+          BitBoard[7]  = ' ';
+        }
+        if (BitBoard[fromPos] == 'k' && toPos-fromPos == -2) { //queenside castle black
+          BitBoard[3]  = 'r';
+          BitBoard[0]  = ' ';
+        }
+        
+        print("Emulated serial communication  --> ");
+        println(str(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
+        //the turn indicated is correct
         byte oldPiece = BitBoard[fromPos];
         
         BitBoard[fromPos] = ' '; //Clear where the piece moved FROM
@@ -159,7 +189,7 @@ String listen() {
     //board[fromChar][8 - fromInt].y = 50 + 100*(8 - toInt);
     //board[fromChar][8 - fromInt].selected = false;
     //board[toChar][8 - toInt] = board[fromChar][8 - fromInt];    
-    //board[fromChar][8 - fromInt] = null;      
+    //board[fromChar][8 - fromInt] = null;          
           
       }
     }
