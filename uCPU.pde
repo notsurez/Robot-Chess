@@ -56,7 +56,8 @@ void keepTime() {
   fill(220);
   rect(boardSize, 0, (width-boardSize), (height)); 
   fill(0);
-  text("Black: CPU (3200)", cpuX, cpuY-5);
+  if (which_side == 'w') text("Black: CPU ("+str(cpu_diff)+")", cpuX, cpuY-5);
+  if (which_side == 'b') text("White: CPU ("+str(cpu_diff)+")", cpuX, cpuY-5);
   fill(50);
   rect(cpuX, cpuY, 200, 50, 10);
   fill(255);
@@ -69,7 +70,8 @@ void keepTime() {
   //White Clock and Player
   textSize(25);
   fill(0);
-  text("White: Player (900)", playerX, playerY-5);
+  if (which_side == 'w') text("White: Player", playerX, playerY-5);
+  if (which_side == 'b') text("Black: Player", playerX, playerY-5);
   fill(50);
   rect(playerX, playerY, 200, 50, 10);
   fill(255);
@@ -85,9 +87,9 @@ void keepTime() {
    
    if(turnState == 'P') {
      player_time--;
-     print("Emulated clock  communications --> ");
-     println(str(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
-  
+     
+     //print("Emulated clock  communications --> ");
+     //println(str(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
    }else {
     computer_time--; 
    }

@@ -414,7 +414,7 @@ void updateBB() {
     }
     return false;
   }
-}
+}//end of class
 
 void addMove(int fromLocation, int toLocation, boolean tellStockfish) {
   heardBestmove = false;

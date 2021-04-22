@@ -48,7 +48,6 @@ float playerY = 180;
 int game_state = 0; //initialize game state variable used to toggle between (game, menu, endgame, etc)
 
 long cherry = 0;
-boolean blk_cherry = false;
 
 char newPiece = ' ';
 int bbcIndex = 420;
@@ -219,7 +218,7 @@ void updatePieces() {
     }
   }
   
-        bbcIndex = (int) floor(pressed_x/(int)gridSize)+floor(pressed_y/(int)gridSize)*8;
+       bbcIndex = (int) floor(pressed_x/(int)gridSize)+floor(pressed_y/(int)gridSize)*8;
   int TobbIndex = (int) floor(the_x/(int)gridSize)+floor(the_y/(int)gridSize)*8;
   
   if(TobbIndex != ' ') {
@@ -329,8 +328,6 @@ void setup_menu() {
   fill(255);
   rect(diff_slider.x, 275, width/2+250-diff_slider.x, 50, 10);
   diff_slider.display();
-  
-  
   start_button.display();
 }
 
