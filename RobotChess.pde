@@ -36,7 +36,7 @@ int pressed_y = 0;
 int the_x = 0;
 int the_y = 0;
 
-float cpuAnal = 15;
+float cpuAnal = -300;
 float cpuY = 60;
 float cpuX = 870;
 float playerX = 870;
@@ -377,14 +377,30 @@ void mouseReleased() {
 
 void exampleCPUAnal(){
   //Indicator Bar
+  float bar_pos = 0;
+  int bound = 2500;
+  bar_pos  = map(cpuAnal, -bound, bound, 20, 780);
+  if(cpuAnal > bound){
+     bar_pos = 780;
+  }else if(cpuAnal < -bound){
+     bar_pos =  20;
+  }
+  cpuAnal += 4;
   fill(0);
-  rect(boardSize, 0, 50, cpuAnal);
+  rect(boardSize, 0, 50, bar_pos);
   fill(255);
-  rect(boardSize, cpuAnal, 50, height);
-  textSize(20);
-  fill(0);
-  text("+M2", boardSize, height/2);
+  rect(boardSize, bar_pos, 50, height);
+  textSize(13);
+  if(bar_pos > height/2-5 ){
+    fill(255);
+  }else{
+      fill(0);
+  }
+  if(bar_pos >= 20 && bar_pos <= 780){
+    text(nf(cpuAnal/100, 2, 2), boardSize, height/2);
+  }
   
+  fill(0);
   text(movesHistory, boardSize+ 50, 300);
   
   text("Menu Buttons down here", boardSize+50, height-70);
