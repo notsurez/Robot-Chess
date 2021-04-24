@@ -227,15 +227,6 @@ void fillArray() {
        legalMoves[i] = false;
      }
    }
-    if(first == true){
-      for(int i = 0; i < 64; i++){ 
-//   print(str(forward[i])+" ");
-//   if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
-//     println();
-//   }
-      }
-      first = false;
-    }
 }
 }
   
@@ -260,18 +251,25 @@ void fillArray() {
     switch(PlayersPiece){
       case 'p':
       if(From >= 8 && From < 16){ //Condition for testing if the pawn is on the 2nd rank and can move two squares
-        if(To-From == 16 || To-From == 8){
+        if((To-From == 16 || To-From == 8)&&blockeddown == false){
           IsitLegal = true;
            if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
           return false;
           }
+          if(BitBoard[To] == 'P'||BitBoard[To] == 'R'||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
+            blockeddown = true;
+            return false;
         }
+      }
       }
                 
       if(To-From == 8){ //Condition for testing if the pawn is moving one square
         IsitLegal = true;
          if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
           return false;
+        }
+        if(BitBoard[To] == 'P'||BitBoard[To] == 'R'||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
+            return false;
         }
             }
       if((To-From == 7||To-From == 9) && (BitBoard[To] == 'P'||BitBoard[To] =='Q'||BitBoard[To] =='B'||BitBoard[To] == 'N'||BitBoard[To] == 'R')){ // Condition to test if the pawn is making a capture
@@ -364,13 +362,13 @@ void fillArray() {
       }
       if((m == -1)&&(y_2 < y_1)){
         IsitLegal = true;
-        if(BitBoard[To] == 'R'||BitBoard[To] == 'N'||BitBoard[To] == 'B'||BitBoard[To] == 'Q'||BitBoard[To] == 'P'){
+        if(BitBoard[To] == 'r'||BitBoard[To] == 'n'||BitBoard[To] == 'b'||BitBoard[To] == 'q'||BitBoard[To] == 'p'||BitBoard[To] == 'k'){
           IsitLegal = false;
         }
       }
        if((m == 1)&&(y_2 < y_1)){
         IsitLegal = true;
-        if(BitBoard[To] == 'R'||BitBoard[To] == 'N'||BitBoard[To] == 'B'||BitBoard[To] == 'Q'||BitBoard[To] == 'P'){
+        if(BitBoard[To] == 'r'||BitBoard[To] == 'n'||BitBoard[To] == 'b'||BitBoard[To] == 'q'||BitBoard[To] == 'p'||BitBoard[To] == 'k'){
           IsitLegal = false;
         }
       }
@@ -401,13 +399,13 @@ void fillArray() {
       }
       if((m == -1)&&(y_2 < y_1)){
         IsitLegal = true;
-        if(BitBoard[To] == 'R'||BitBoard[To] == 'N'||BitBoard[To] == 'B'||BitBoard[To] == 'Q'||BitBoard[To] == 'P'){
+        if(BitBoard[To] == 'r'||BitBoard[To] == 'n'||BitBoard[To] == 'b'||BitBoard[To] == 'q'||BitBoard[To] == 'p'||BitBoard[To] == 'k'){
           IsitLegal = false;
         }
       }
        if((m == 1)&&(y_2 < y_1)){
         IsitLegal = true;
-        if(BitBoard[To] == 'R'||BitBoard[To] == 'N'||BitBoard[To] == 'B'||BitBoard[To] == 'Q'||BitBoard[To] == 'P'){
+        if(BitBoard[To] == 'r'||BitBoard[To] == 'n'||BitBoard[To] == 'b'||BitBoard[To] == 'q'||BitBoard[To] == 'p'||BitBoard[To] == 'k'){
           IsitLegal = false;
         }
       }     
@@ -469,17 +467,23 @@ void fillArray() {
         if(From >= 48 && From < 56){//Condition for testing if the pawn is on the 2nd rank and can move two squares
           if(To-From == -16 || To-From == -8){
           IsitLegal = true;
-          if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
-        return false;
-            }
+          if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+          return false;
+        }
+        if(BitBoard[To] == 'P'||BitBoard[To] == 'R'||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
+            return false;
+        }
           }
         }
                 
       if(To-From == -8){ //Condition for testing if the pawn is moving one square
         IsitLegal = true;
-              if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
-        return false;
-      }
+              if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+          return false;
+        }
+        if(BitBoard[To] == 'P'||BitBoard[To] == 'R'||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
+            return false;
+        }
             }
 
       if((To-From == -7||To-From == -9) && (BitBoard[To] == 'p'||BitBoard[To] =='q'||BitBoard[To] =='b'||BitBoard[To] == 'n'||BitBoard[To] == 'r')){ // Condition to test if the pawn is making a capture
@@ -576,13 +580,13 @@ void fillArray() {
       }
       if((m == -1)&&(y_2 < y_1)){
         IsitLegal = true;
-        if(BitBoard[To] == 'r'||BitBoard[To] == 'n'||BitBoard[To] == 'b'||BitBoard[To] == 'q'||BitBoard[To] == 'p'){
+        if(BitBoard[To] == 'R'||BitBoard[To] == 'N'||BitBoard[To] == 'B'||BitBoard[To] == 'Q'||BitBoard[To] == 'P'||BitBoard[To] == 'K'){
           IsitLegal = false;
         }
       }
        if((m == 1)&&(y_2 < y_1)){
         IsitLegal = true;
-        if(BitBoard[To] == 'r'||BitBoard[To] == 'n'||BitBoard[To] == 'b'||BitBoard[To] == 'q'||BitBoard[To] == 'p'){
+        if(BitBoard[To] == 'R'||BitBoard[To] == 'N'||BitBoard[To] == 'B'||BitBoard[To] == 'Q'||BitBoard[To] == 'P'||BitBoard[To] == 'K'){
           IsitLegal = false;
         }
       }
@@ -613,13 +617,13 @@ void fillArray() {
       }
       if((m == -1)&&(y_2 < y_1)){
         IsitLegal = true;
-        if(BitBoard[To] == 'r'||BitBoard[To] == 'n'||BitBoard[To] == 'b'||BitBoard[To] == 'q'||BitBoard[To] == 'p'){
+        if(BitBoard[To] == 'R'||BitBoard[To] == 'N'||BitBoard[To] == 'B'||BitBoard[To] == 'Q'||BitBoard[To] == 'P'||BitBoard[To] == 'K'){
           IsitLegal = false;
         }
       }
        if((m == 1)&&(y_2 < y_1)){
         IsitLegal = true;
-        if(BitBoard[To] == 'r'||BitBoard[To] == 'n'||BitBoard[To] == 'b'||BitBoard[To] == 'q'||BitBoard[To] == 'p'){
+        if(BitBoard[To] == 'R'||BitBoard[To] == 'N'||BitBoard[To] == 'B'||BitBoard[To] == 'Q'||BitBoard[To] == 'P'||BitBoard[To] == 'K'){
           IsitLegal = false;
         }
       }
@@ -678,6 +682,10 @@ void fillArray() {
       }
     return IsitLegal;
   }
+  
+   
+   
+   
    boolean isLegal2(int From, int To){
     boolean IsitLegal = false;
     byte PlayersPiece = BitBoard[From];
@@ -701,14 +709,20 @@ void fillArray() {
           IsitLegal = true;
            if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
           return false;
-          }
+        }
+        if(BitBoard[To] == 'P'||BitBoard[To] == 'R'||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
+            return false;
+        }
         }
       }
                 
       if(To-From == 8){ //Condition for testing if the pawn is moving one square
         IsitLegal = true;
-         if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+        if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
           return false;
+        }
+        if(BitBoard[To] == 'P'||BitBoard[To] == 'R'||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
+            return false;
         }
             }
       if((To-From == 7||To-From == 9) && (BitBoard[To] == 'P'||BitBoard[To] =='Q'||BitBoard[To] =='B'||BitBoard[To] == 'N'||BitBoard[To] == 'R')){ // Condition to test if the pawn is making a capture
@@ -905,26 +919,31 @@ void fillArray() {
       
       case 'P': // White Pawn
         if(From >= 48 && From < 56){//Condition for testing if the pawn is on the 2nd rank and can move two squares
-          if(To-From == -16 || To-From == -8){
+          if((To-From == -16 || To-From == -8)&&blockedup == false){
           IsitLegal = true;
-          if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
-        return false;
-            }
+          if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+            blockedup = true;
+          return false;
+        }
+        if(BitBoard[To] == 'P'||BitBoard[To] == 'R'||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
+            return false;
+        }
           }
         }
                 
       if(To-From == -8){ //Condition for testing if the pawn is moving one square
         IsitLegal = true;
-              if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
-        return false;
+              if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
+          return false;
+        }
+        if(BitBoard[To] == 'P'||BitBoard[To] == 'R'||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
+            return false;
+        }
       }
-            }
+            
 
       if((To-From == -7||To-From == -9) && (BitBoard[To] == 'p'||BitBoard[To] =='q'||BitBoard[To] =='b'||BitBoard[To] == 'n'||BitBoard[To] == 'r')){ // Condition to test if the pawn is making a capture
         IsitLegal = true;
-              if(BitBoard[To] == 'R' ||BitBoard[To] =='N'||BitBoard[To] == 'B'||BitBoard[To] =='Q'||BitBoard[To] =='K'||BitBoard[To] == 'P'){ // Condition to test if the pawn is trying to move to a square occupied by a friendly piece
-        return false;
-      }
       }
 
       if(To < 0|| To > 63){ //returns false if move is off the board
@@ -1114,7 +1133,7 @@ void fillArray() {
         return false;
       } 
       break;
-      }
+   }
     return IsitLegal;
   }
 
@@ -1127,14 +1146,13 @@ void fillArray() {
   }
 }//end of class
 
-void addMove(int fromLocation, int toLocation, boolean tellStockfish, boolean playerAnal) {
+void addMove(int fromLocation, int toLocation, boolean tellStockfish) {
   heardBestmove = false;
   if (fromLocation == toLocation) return;
   //if (turnState == 'P') movesHistory = movesHistory + "\n"; //P for white/player, p for black/computer
   if (cherry < 50) return;
   cherry = 0;
   
-  String oldmovesHistory = movesHistory;
   movesHistory = movesHistory + bbCoordString(fromLocation) + bbCoordString(toLocation) + " ";
   
   if (tellStockfish) {
@@ -1153,8 +1171,6 @@ void addMove(int fromLocation, int toLocation, boolean tellStockfish, boolean pl
   delay(20);
   }
 }
-  
-  if (playerAnal == true) movesHistory = oldmovesHistory;
 }
 
 String bbCoordString(int Location) {

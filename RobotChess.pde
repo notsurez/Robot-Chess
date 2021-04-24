@@ -247,7 +247,7 @@ void updatePieces() {
   BitBoard[bbcIndex] = ' ';
   BitBoard[TobbIndex] = (byte)newPiece;
   turnState = 'C';
-  addMove(bbcIndex, TobbIndex, true, false);
+  addMove(bbcIndex, TobbIndex, true);
   turnState = 'P';
   
       // Print BitBoard for debugging
@@ -357,7 +357,8 @@ void mousePressed() {
   
   for (int i = 0; i<8; i++){
     for (int j = 0; j<8; j++) { 
-      if (board[i][j] != null){
+      //do not allow picking up enemy pieces
+      if (board[i][j] != null && (board[i][j].pieceType == 'K' || board[i][j].pieceType == 'Q' || board[i][j].pieceType == 'R' || board[i][j].pieceType == 'N' || board[i][j].pieceType == 'B' || board[i][j].pieceType == 'P')) {
         if(board[i][j].MouseIsOver()) {
           board[i][j].selected = true;
         }    
@@ -423,9 +424,9 @@ void mouseReleased() {
   int j = (the_new_y)/100;
   
   if (i > 7 || j > 7) println("Overflow error!"); //this should never happen
-  
     if (i < 8 && j < 8) {
-      if (board[i][j] != null){
+      //do not allow moving enemy pieces
+      if (board[i][j] != null && (board[i][j].pieceType == 'K' || board[i][j].pieceType == 'Q' || board[i][j].pieceType == 'R' || board[i][j].pieceType == 'N' || board[i][j].pieceType == 'B' || board[i][j].pieceType == 'P')) {
         if(board[i][j].MouseIsOver() && mouseX < boardSize && mouseY < boardSize) {
           board[i][j].selected = false;
           board[i][j].x = int(mouseX/gridSize)*(gridSize)+gridSize/2;
@@ -463,13 +464,13 @@ void exampleCPUAnal(){
   }
 
   if (game_gg == false) {
-  if (forced_mate == false) text(nf((float)cpuAnal/100, 2, 2), boardSize + 5, height/2);
+  if (forced_mate == false) text(nf((float)(0-cpuAnal)/100, 2, 2), boardSize + 5, height/2);
   if (forced_mate == true && cpuAnal < 0)   {
-    text("-M" + str(abs(cpuAnal)), boardSize + 5, height/2);
+    text("+M" + str(abs(cpuAnal)), boardSize + 5, height/2);
     bar_pos = 0;
   }
   if (forced_mate == true && cpuAnal > -1)  {
-    text("+M" + str(abs(cpuAnal)), boardSize + 5, height/2);
+    text("-M" + str(abs(cpuAnal)), boardSize + 5, height/2);
     bar_pos = 800;
   }
   }
