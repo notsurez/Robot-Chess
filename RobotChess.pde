@@ -201,6 +201,7 @@ void drawPieces() {
         board[i][j].display();//piece
         board[i][j].MouseIsOver();
         board[i][j].move();
+        board[i][j].fillArray();
         board[i][j].highlightLegal();
       }
     }

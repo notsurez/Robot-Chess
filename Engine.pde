@@ -105,11 +105,11 @@ String listen() {
   }
 
   if (inputStr != null && !inputStr.equals("")) {
-    if (inputStr.contains("cp")) {
+    if (inputStr.contains("cp")   && inputStr.contains("nodes")) {
       cpuAnal = int(inputStr.substring(inputStr.indexOf("cp")+3, inputStr.indexOf("nodes")-1));
       forced_mate = false;
     }
-    if (inputStr.contains("mate")) {
+    if (inputStr.contains("mate") && inputStr.contains("nodes")) {
       cpuAnal = int(inputStr.substring(inputStr.indexOf("mate")+5, inputStr.indexOf("nodes")-1));
       forced_mate = true;
     }
