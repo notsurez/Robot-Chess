@@ -260,13 +260,13 @@ void fillArray() {
     switch(PlayersPiece){
       case 'p':
       if(From >= 8 && From < 16){ //Condition for testing if the pawn is on the 2nd rank and can move two squares
-        if((To-From == 16 || To-From == 8)&&blockedup == false){
+        if((To-From == 16 || To-From == 8)&&blockeddown == false){
           IsitLegal = true;
            if(BitBoard[To] == 'p' ||BitBoard[To] == 'r' ||BitBoard[To] == 'b'||BitBoard[To] == 'n'||BitBoard[To] == 'q'||BitBoard[To] == 'k'){
-             blockedup = true;
           return false;
           }
           if(BitBoard[To] == 'P'||BitBoard[To] == 'R'||BitBoard[To] == 'B'||BitBoard[To] == 'N'||BitBoard[To] == 'Q'||BitBoard[To] == 'K'){
+            blockeddown = true;
             return false;
         }
       }
