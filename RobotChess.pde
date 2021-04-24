@@ -60,6 +60,7 @@ byte BitBoard[] = new byte[64];
 char turnState = 'P'; //P for white/player, p for black/computer
 
 String movesHistory = " moves ";
+String evalString = "e2e4";
 //long frameCounter = 0;
 
 boolean castling_occured = false;
@@ -222,6 +223,23 @@ void updatePieces() {
        bbcIndex = (int) floor(pressed_x/(int)gridSize)+floor(pressed_y/(int)gridSize)*8;
   int TobbIndex = (int) floor(the_x/(int)gridSize)+floor(the_y/(int)gridSize)*8;
   
+  if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex ==  2) { //kingside  castle white
+          BitBoard[61] = 'R';
+          BitBoard[63] = ' ';
+        }
+        if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex == -2) { //queenside castle white
+          BitBoard[59] = 'R';
+          BitBoard[56] = ' ';
+        }
+        if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex ==  2) { //kingside  castle black
+          BitBoard[5]  = 'r';
+          BitBoard[7]  = ' ';
+        }
+        if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex == -2) { //queenside castle black
+          BitBoard[3]  = 'r';
+          BitBoard[0]  = ' ';
+        }
+  
   if(TobbIndex != ' ') {
     BitBoard[TobbIndex] = ' ';
   }
@@ -229,7 +247,7 @@ void updatePieces() {
   BitBoard[bbcIndex] = ' ';
   BitBoard[TobbIndex] = (byte)newPiece;
   turnState = 'C';
-  addMove(bbcIndex, TobbIndex, true);
+  addMove(bbcIndex, TobbIndex, true, false);
   turnState = 'P';
   
       // Print BitBoard for debugging
@@ -466,7 +484,7 @@ void exampleCPUAnal(){
   fill(0);
   text(movesHistory, boardSize + 50, 300);
   
-  text("Menu Buttons down here", boardSize + 50, height - 70);
+  text("Your Best Move: " + evalString, boardSize + 50, height - 70);
 }
 
 //Star class for start menu background

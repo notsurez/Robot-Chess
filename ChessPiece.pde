@@ -1127,13 +1127,14 @@ void fillArray() {
   }
 }//end of class
 
-void addMove(int fromLocation, int toLocation, boolean tellStockfish) {
+void addMove(int fromLocation, int toLocation, boolean tellStockfish, boolean playerAnal) {
   heardBestmove = false;
   if (fromLocation == toLocation) return;
   //if (turnState == 'P') movesHistory = movesHistory + "\n"; //P for white/player, p for black/computer
   if (cherry < 50) return;
   cherry = 0;
   
+  String oldmovesHistory = movesHistory;
   movesHistory = movesHistory + bbCoordString(fromLocation) + bbCoordString(toLocation) + " ";
   
   if (tellStockfish) {
@@ -1152,6 +1153,8 @@ void addMove(int fromLocation, int toLocation, boolean tellStockfish) {
   delay(20);
   }
 }
+  
+  if (playerAnal == true) movesHistory = oldmovesHistory;
 }
 
 String bbCoordString(int Location) {

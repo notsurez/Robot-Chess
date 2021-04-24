@@ -119,7 +119,12 @@ String listen() {
       println(inputStr);
       String moveString = "";
       
-      if ( inputStr.contains("ponder")) moveString = inputStr.substring(10, inputStr.indexOf("ponder")-1);
+      if ( inputStr.contains("ponder")) {
+        evalString = inputStr.substring(inputStr.indexOf("ponder") + 7);
+        print("evalString: ");
+        println(evalString);
+        moveString = inputStr.substring(10, inputStr.indexOf("ponder")-1);
+      }
       if (!inputStr.contains("ponder")) {
         moveString = inputStr.substring(10, 14); //the game is over btw
         game_gg = true;
