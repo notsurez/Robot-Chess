@@ -13,9 +13,8 @@ import java.io.*;
   -Say
       * Sends a string to the engine using process builder io streams
   
-  Written by: Christian Brazeau
-  Other Contributers:
-  Last modified: 03/12/2021
+  Written by: Christian Brazeau, Timothy Reichert, and Peter Taranto
+  Last modified: 04/29/2021
 */
 
 int lineToSay = -1; // ????

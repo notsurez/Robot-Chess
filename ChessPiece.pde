@@ -3,7 +3,7 @@
   determine legal moves, and allow the user to select pieces
   
   Written by: Christian Brazeau, Timothy Reichert, and Peter Taranto
-  Last modified: 03/12/2021
+  Last modified: 04/29/2021
 */
 
 import java.lang.Object;

@@ -1,9 +1,8 @@
 /*
   Driver file for the the "Robot Chess" project
   
-  Written by: Christian Brazeau
-  Other Contributers:
-  Last modified: 03/12/2021
+  Written by: Christian Brazeau, Timothy Reichert, and Peter Taranto
+  Last modified: 04/29/2021
 */
 
 import processing.serial.*;
@@ -16,7 +15,8 @@ String path = "C:\\Users\\cwbra\\Documents\\Stockfish\\stockfish_20090216_x64_bm
 //Initialize button objects (I will add more buttons when we start making menus)
 Button start_button; 
 Button menu_button;
-Button black, white, random, diff_slider, resign;
+Button returnToMenu;
+Button black, white, random, diff_slider, resign, Q, R, B, N;
 
 //setup variables
 char which_side = 'w';
@@ -71,6 +71,7 @@ boolean castline_side = false;      //false = queenside, true = kingside
 
 char promoted_pawn = 'Q';     //what will the promoted pawn become
 char promoted_cpu_pawn = 'p'; //what the cpu promoted its pawn to
+boolean promotionNotSelected = true;
 
 void setup() { 
   for(int i = 0; i < 64; i++) BitBoard[i] = ' ';
@@ -78,7 +79,7 @@ void setup() {
   size(1200,800);
   background(50,50,70);
   
-  int dia = int(random(1,5));
+  int dia = int(random(1,6));
   int numbStars = width;
   stars = new Star[numbStars];
   for(int i = 0; i < stars.length; i++){
@@ -96,8 +97,14 @@ void setup() {
   
   diff_slider = new Button(" ", width/2, 300, 30, 50, color(40), color(0), 20);
   
-  resign = new Button("Resign", width - 100, height-75, 75, 60, color(255), color(0), 20);
-   
+  resign = new Button("Resign", width-65, 140, 75, 60, color(255), color(0), 20);
+  returnToMenu = new Button("Main Menu", width/2, height/2+150, 300, 75, color(255), color(0), 50);
+  //Promotion buttons
+  Q = new Button("Q", boardSize+100, height/2.5, 60, 60, color(255), color(0), 30);
+  R = new Button("R", boardSize+180, height/2.5, 60, 60, color(255), color(0), 30);
+  B = new Button("B", boardSize+260, height/2.5, 60, 60, color(255), color(0), 30);
+  N = new Button("N", boardSize+340, height/2.5, 60, 60, color(255), color(0), 30);
+  Q.active = true;
   stockfish = new Engine(path);
   stockfish.init();
   
@@ -257,9 +264,8 @@ void updatePieces() {
           BitBoard[3]  = 'r';
           BitBoard[0]  = ' ';
         }
-        
-  if (BitBoard[bbcIndex] == 'P' && TobbIndex < 8)  newPiece = promoted_pawn;
   
+  if (BitBoard[bbcIndex] == 'P' && TobbIndex < 8) newPiece = promoted_pawn;
   if(TobbIndex != ' ') {
     BitBoard[TobbIndex] = ' ';
   }
@@ -398,7 +404,7 @@ void mousePressed() {
   newGame();
   game_state = 2; 
  }
- if(menu_button.MouseIsOver()  && game_state != 2) {
+ if(menu_button.MouseIsOver()  && game_state == 0) {
   game_state = 1; 
  }
  if(white.MouseIsOver()  && game_state == 1) {
@@ -435,6 +441,42 @@ void mousePressed() {
  
  if(resign.MouseIsOver() && game_state == 2) {
    game_gg = true;
+ }
+ 
+ if(Q.MouseIsOver() && game_state == 2) {
+   Q.active = true;
+   R.active = false;
+   B.active = false;
+   N.active = false;
+   promoted_pawn = 'Q';
+ }
+ 
+  if(R.MouseIsOver() && game_state == 2) {
+   Q.active = false;
+   R.active = true;
+   B.active = false;
+   N.active = false;
+   promoted_pawn = 'R';
+ }
+ 
+  if(B.MouseIsOver() && game_state == 2) {
+   Q.active = false;
+   R.active = false;
+   B.active = true;
+   N.active = false;
+   promoted_pawn = 'B';
+ }
+ 
+ if(N.MouseIsOver() && game_state == 2) {
+   Q.active = false;
+   R.active = false;
+   B.active = false;
+   N.active =true;
+   promoted_pawn = 'N';
+ }
+ 
+ if(returnToMenu.MouseIsOver() && game_state == 3) {
+   game_state = 0;
  }
 } //end of mousePressed
 
@@ -511,10 +553,17 @@ void exampleCPUAnal(){
     text("1-0", boardSize + 5, height/2);
     bar_pos = 0;
   }
+  textSize(25);
   fill(0);
-  text(movesHistory, boardSize + 50, 300);
+  text("Pawn Promotion", boardSize + 60, height/2.5-50);
   
   text("Your Best Move: " + evalString, boardSize + 50, height - 70);
+  fill(100);
+  rect(boardSize+60, height/2.5-40, 320, 80, 15);
+  Q.display();
+  R.display();
+  B.display();
+  N.display();
 }
 
 //Star class for start menu background
@@ -566,7 +615,7 @@ class Button {
  }
  
  void display() {
-   fill(0, 255,0);
+   fill(50,255,50);
    if(active) rect(x-((w+ol)/2),y-((h+ol)/2),w+ol,h+ol,10);
    fill(c);
    rect(x-(w/2),y-(h/2),w,h,10);
@@ -594,6 +643,7 @@ void lossCard() {
   rect(width/2, height/2, width/2.6, height - 220, 20);
   rectMode(CORNER);
   start_button.display();
+  returnToMenu.display();
   game_gg = true;
 }
 

@@ -1,3 +1,9 @@
+/*
+  Description
+  
+  Written by: Christian Brazeau, Timothy Reichert, and Peter Taranto
+  Last modified: 04/29/2021
+*/
 Serial microPC;
 boolean board_connected = false;
 
