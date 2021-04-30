@@ -130,15 +130,18 @@ void draw() {
   switch(game_state){
   //Start Menu
   case 0:
+    frameRate(60);
     startMenu();
   break;
   
   //Setup Menu
   case 1:
+    frameRate(60);
     setup_menu();
   break;
   
   case 2:
+    frameRate(240);
     drawBoard();
     drawPieces();
     keepTime();
@@ -150,14 +153,18 @@ void draw() {
     //stockfish.drawfunc(); //if (frameCounter % 10 == 0) ...
     //frameCounter++;
     //println("made it out alive");
+    textSize(10);
+    text(round(frameRate) + " FPS", width - 50, 20);
   break;
   
   case 3:
+    frameRate(60);
     if (gg_countdown >  0) gg_countdown--;
     if (gg_countdown == 0) lossCard();
   break;
   
   default:
+    frameRate(60);
   }
   
   if (bbcIndex == 400) updatePieces();
