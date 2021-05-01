@@ -59,12 +59,20 @@ String blk_fen = "rnbqkbnr/pppp1ppp/8/4p3/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 byte BitBoard[] = new byte[64];
 byte TempBoard[] = new byte[64];
 char turnState = 'P'; //P for white/player, p for black/computer
+byte positionOfPlayerKing() {
+  //return the location of the player's king
+  for(byte c = 0; c < 64; c++) {
+    if (BitBoard[c] == 'K') return c;
+  }
+  return -1; //error
+}
 
 String movesHistory = " moves ";
 //long frameCounter = 0;
 
 boolean castling_occured = false;
 boolean castline_side = false;      //false = queenside, true = kingside
+
 
 void setup() { 
   for(int i = 0; i < 64; i++) BitBoard[i] = ' ';
@@ -202,7 +210,7 @@ void drawPieces() {
         board[i][j].display();//piece
         board[i][j].MouseIsOver();
         board[i][j].move();
-        board[i][j].fillArray();
+        //board[i][j].fillArray();
         board[i][j].highlightLegal();
       }
     }
@@ -234,14 +242,14 @@ void updatePieces() {
   turnState = 'P';
   
       // Print BitBoard for debugging
-    println("Print BitBoard for debugging");
-    for(int i = 0; i < 64; i++) {
-     print((char)BitBoard[i]);
-     if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
-       println();
-     }
-    }
-    println(" ");
+    //println("Print BitBoard for debugging");
+    //for(int i = 0; i < 64; i++) {
+    // print((char)BitBoard[i]);
+    // if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
+    //   println();
+    // }
+    //}
+    //println(" ");
   
   println(movesHistory);
   
@@ -340,9 +348,13 @@ void mousePressed() {
   
   for (int i = 0; i<8; i++){
     for (int j = 0; j<8; j++) { 
-      if (board[i][j] != null){
+    if (board[i][j] != null) {
         if(board[i][j].MouseIsOver()) {
           board[i][j].selected = true;
+          board[i][j].fillArray();
+          board[i][j].fillArray();
+          board[i][j].kingincheck();
+          board[i][j].testcheck();
         }    
       }
     }
