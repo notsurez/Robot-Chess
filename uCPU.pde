@@ -3,7 +3,7 @@ boolean board_connected = false;
 
 void uCPUinit(int which_cpu) {
   print("Initializing uCPU on COM port ");
-  microPC = new Serial(this, Serial.list()[which_cpu], 57600);
+  microPC = new Serial(this, Serial.list()[which_cpu], 4800);
   board_connected = true;
   println(which_cpu);
 }
@@ -46,6 +46,8 @@ char[] toBase64(byte[] bb, boolean castling, boolean castling_side, int timeStri
   }
   
   castling_occured = false;
+  castling_side = false;
+  
   return charArr;
 }
 

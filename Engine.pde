@@ -21,6 +21,8 @@ import java.io.*;
 int lineToSay = -1; // ????
 boolean guiHasToSaySomething = true; 
 
+boolean promoted_cherry = false;
+
 int delayPeriod = 11;
 
 class Engine {
@@ -50,8 +52,7 @@ class Engine {
     }else {
        println("sucessfully initialized output/input streams"); 
     }
-    
-    
+     
   }
   
   /*
@@ -105,11 +106,11 @@ String listen() {
   }
 
   if (inputStr != null && !inputStr.equals("")) {
-    if (inputStr.contains("cp")) {
+    if (inputStr.contains("cp")   && inputStr.contains("nodes")) {
       cpuAnal = int(inputStr.substring(inputStr.indexOf("cp")+3, inputStr.indexOf("nodes")-1));
       forced_mate = false;
     }
-    if (inputStr.contains("mate")) {
+    if (inputStr.contains("mate") && inputStr.contains("nodes")) {
       cpuAnal = int(inputStr.substring(inputStr.indexOf("mate")+5, inputStr.indexOf("nodes")-1));
       forced_mate = true;
     }
@@ -119,15 +120,42 @@ String listen() {
       println(inputStr);
       String moveString = "";
       
-      if ( inputStr.contains("ponder")) moveString = inputStr.substring(10, inputStr.indexOf("ponder")-1);
+      if (inputStr.contains("ponder")) {
+        evalString = inputStr.substring(inputStr.indexOf("ponder") + 7);
+        if (which_side == 'b') {
+         //invert the eval string 
+         byte eval1 = (byte) evalString.charAt(0);
+         byte eval2 = (byte) evalString.charAt(1);
+         byte eval3 = (byte) evalString.charAt(2);
+         byte eval4 = (byte) evalString.charAt(3);
+
+         eval1 = (byte) (104 - eval1 + 97);
+         eval3 = (byte) (104 - eval3 + 97);
+         eval2 = (byte) (56  - eval2 + 49);
+         eval4 = (byte) (56  - eval4 + 49);
+         
+         evalString = str((char) eval1) + str((char) eval2) + str((char) eval3) + str((char) eval4);
+        }
+
+        print("evalString = ");
+        println(evalString);
+        moveString = inputStr.substring(10, inputStr.indexOf("ponder")-1);
+      }
       if (!inputStr.contains("ponder")) {
         moveString = inputStr.substring(10, 14); //the game is over btw
         game_gg = true;
       println("GG");
-      delay(10000);
+      //delay(10000);
       }
       print("move string = ");
       println(moveString);
+      if (moveString.length() == 5) {
+        promoted_cpu_pawn = moveString.charAt(4);
+        moveString = moveString.substring(0, 4);
+        print("Computer promoted pawn to ");
+        println(promoted_cpu_pawn);
+        promoted_cherry = true;
+      }
       if (moveString.length() == 4 && !moveString.contains("(non")) { //move the piece
         int fromChar = (int) moveString.charAt(0) - 97;
         int  fromInt  = (int) moveString.charAt(1) - 48;
@@ -150,22 +178,30 @@ String listen() {
         if (BitBoard[fromPos] == 'K' && toPos-fromPos ==  2) { //kingside  castle white
           BitBoard[61] = 'R';
           BitBoard[63] = ' ';
+          castling_occured = true;
+          castling_side = true;
         }
         if (BitBoard[fromPos] == 'K' && toPos-fromPos == -2) { //queenside castle white
           BitBoard[59] = 'R';
           BitBoard[56] = ' ';
+          castling_occured = true;
+          castling_side = false;
         }
         if (BitBoard[fromPos] == 'k' && toPos-fromPos ==  2) { //kingside  castle black
           BitBoard[5]  = 'r';
           BitBoard[7]  = ' ';
+          castling_occured = true;
+          castling_side = true;
         }
         if (BitBoard[fromPos] == 'k' && toPos-fromPos == -2) { //queenside castle black
           BitBoard[3]  = 'r';
           BitBoard[0]  = ' ';
+          castling_occured = true;
+          castling_side = false;
         }
-        
+
         print("Emulated serial communication  --> ");
-        println(str(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
+        println(str(toBase64(BitBoard, castling_occured, castling_side, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
         //the turn indicated is correct
         byte oldPiece = BitBoard[fromPos];
         
@@ -179,9 +215,23 @@ String listen() {
       println("Computer PIECE REMOVED ", (char)BitBoard[toPos], " on (", toPos%8, ",",floor(toPos/8), ")"  );
     }
 
-    if (fromPos != toPos) movesHistory = movesHistory + bbCoordString(fromPos) + bbCoordString(toPos) + " ";
+    if (fromPos != toPos && promoted_cherry == false) movesHistory = movesHistory + bbCoordString(fromPos) + bbCoordString(toPos) + " ";
+    if (fromPos != toPos && promoted_cherry == true)  movesHistory = movesHistory + bbCoordString(fromPos) + bbCoordString(toPos) + promoted_cpu_pawn + " ";
+    promoted_cherry = false;
+    
+  if (oldPiece == 'p' && toPos > 55) {
+   println("promoting the pawn");
+   print("frompos: ");
+   println(fromPos);
+   print("topos: ");
+   println(toPos);
+   print("promoting it to ");
+   println(promoted_cpu_pawn);
+  }
 
+    int old_toPos = toPos;
     fromPos = toPos;
+    if (oldPiece == 'p' && old_toPos > 55) oldPiece = (byte)promoted_cpu_pawn;
     BitBoard[fromPos] = oldPiece;
     
     //board[fromChar][8 - fromInt].selected = true;
@@ -371,7 +421,7 @@ void say2 (String str) {
 void send_config() {
     String stringToSend;
     stringToSend = "setoption name UCI_Elo value " + str(cpu_diff);
-    this.listen();
+    //this.listen();
     delay(20);
     this.say(stringToSend);
     delay(20);

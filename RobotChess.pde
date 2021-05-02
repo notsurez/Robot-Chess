@@ -1,9 +1,8 @@
 /*
   Driver file for the the "Robot Chess" project
   
-  Written by: Christian Brazeau
-  Other Contributers:
-  Last modified: 03/12/2021
+  Written by: Christian Brazeau, Timothy Reichert, and Peter Taranto
+  Last modified: 04/29/2021
 */
 
 import processing.serial.*;
@@ -16,7 +15,8 @@ String path = "C:\\Users\\colin\\Desktop\\Chess engine\\stockfish_13_win_x64"; /
 //Initialize button objects (I will add more buttons when we start making menus)
 Button start_button; 
 Button menu_button;
-Button black, white, random, diff_slider;
+Button returnToMenu;
+Button black, white, random, diff_slider, resign, Q, R, B, N;
 
 //setup variables
 char which_side = 'w';
@@ -30,14 +30,17 @@ int boardSize = 800;
 float gridSize = boardSize/8;
 int pieceSize = (int)gridSize;
 
-int pressed_x = 0;
-int pressed_y = 0;
+int pressed_x  = 0;
+int pressed_y  = 0;
+int pressed_x2 = 0;
+int pressed_y2 = 0;
 int the_x = 0;
 int the_y = 0;
 
 int cpuAnal = 0; //centipawns or number of moves until forced mate
 boolean forced_mate = false;
 boolean game_gg = false;
+int gg_countdown = 300;
 float bar_pos = 400;
 
 float cpuY = 60;
@@ -58,21 +61,23 @@ String blk_fen = "rnbqkbnr/pppp1ppp/8/4p3/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 byte BitBoard[] = new byte[64];
 byte TempBoard[] = new byte[64];
+boolean shesLegal[] = new boolean[64];
+
 char turnState = 'P'; //P for white/player, p for black/computer
-byte positionOfPlayerKing() {
-  //return the location of the player's king
-  for(byte c = 0; c < 64; c++) {
-    if (BitBoard[c] == 'K') return c;
-  }
-  return -1; //error
-}
 
 String movesHistory = " moves ";
+String evalString = "e2e4";
 //long frameCounter = 0;
 
 boolean castling_occured = false;
-boolean castline_side = false;      //false = queenside, true = kingside
+boolean castling_side = false;      //false = queenside, true = kingside
 
+char promoted_pawn = 'Q';     //what will the promoted pawn become
+char promoted_cpu_pawn = 'p'; //what the cpu promoted its pawn to
+boolean promotionNotSelected = true;
+
+boolean queenside_cherry = true;
+boolean kingside_cherry  = true;
 
 void setup() { 
   for(int i = 0; i < 64; i++) BitBoard[i] = ' ';
@@ -80,7 +85,7 @@ void setup() {
   size(1200,800);
   background(50,50,70);
   
-  int dia = int(random(1,5));
+  int dia = int(random(1,6));
   int numbStars = width;
   stars = new Star[numbStars];
   for(int i = 0; i < stars.length; i++){
@@ -98,6 +103,14 @@ void setup() {
   
   diff_slider = new Button(" ", width/2, 300, 30, 50, color(40), color(0), 20);
   
+  resign = new Button("Resign", width-65, 140, 75, 60, color(255), color(0), 20);
+  returnToMenu = new Button("Main Menu", width/2, height/2+150, 300, 75, color(255), color(0), 50);
+  //Promotion buttons
+  Q = new Button("Q", boardSize+100, height/2.5, 60, 60, color(255), color(0), 30);
+  R = new Button("R", boardSize+180, height/2.5, 60, 60, color(255), color(0), 30);
+  B = new Button("B", boardSize+260, height/2.5, 60, 60, color(255), color(0), 30);
+  N = new Button("N", boardSize+340, height/2.5, 60, 60, color(255), color(0), 30);
+  Q.active = true;
   stockfish = new Engine(path);
   stockfish.init();
   
@@ -105,7 +118,7 @@ void setup() {
   //readFen(cur_fen);
   //drawPieces();
   
-  //uCPUinit(0); //use the 2nd COM port
+  uCPUinit(0); //use the 2nd COM port
 }
 
 void draw() {  
@@ -120,24 +133,41 @@ void draw() {
   switch(game_state){
   //Start Menu
   case 0:
+    frameRate(60);
     startMenu();
   break;
+  
   //Setup Menu
   case 1:
+    frameRate(60);
     setup_menu();
   break;
+  
   case 2:
+    frameRate(240);
     drawBoard();
     drawPieces();
     keepTime();
     exampleCPUAnal();
     
+    resign.display();
+    if(game_gg == true) game_state = 3;
     //println("running drawfunc");
     //stockfish.drawfunc(); //if (frameCounter % 10 == 0) ...
     //frameCounter++;
     //println("made it out alive");
+    textSize(10);
+    text(round(frameRate) + " FPS", width - 50, 20);
   break;
+  
+  case 3:
+    frameRate(60);
+    if (gg_countdown >  0) gg_countdown--;
+    if (gg_countdown == 0) lossCard();
+  break;
+  
   default:
+    frameRate(60);
   }
   
   if (bbcIndex == 400) updatePieces();
@@ -210,7 +240,8 @@ void drawPieces() {
         board[i][j].display();//piece
         board[i][j].MouseIsOver();
         board[i][j].move();
-        //board[i][j].fillArray();
+        pressed_x2 = mouseX;
+        pressed_y2 = mouseY;
         board[i][j].highlightLegal();
       }
     }
@@ -219,9 +250,9 @@ void drawPieces() {
 
 void updatePieces() {
   
-  for (int i = 0; i<8; i++){
+  for (int i = 0; i<8; i++) {
     for (int j = 0; j<8; j++) { 
-      if (board[i][j] != null){
+      if (board[i][j] != null) {
         board[i][j].x=0;
         board[i][j].y=0;
       }
@@ -231,6 +262,32 @@ void updatePieces() {
        bbcIndex = (int) floor(pressed_x/(int)gridSize)+floor(pressed_y/(int)gridSize)*8;
   int TobbIndex = (int) floor(the_x/(int)gridSize)+floor(the_y/(int)gridSize)*8;
   
+  if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex ==  2) { //kingside  castle white
+          BitBoard[61] = 'R';
+          BitBoard[63] = ' ';
+          castling_occured = true;
+          castling_side = true;
+        }
+        if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex == -2) { //queenside castle white
+          BitBoard[59] = 'R';
+          BitBoard[56] = ' ';
+          castling_occured = true;
+          castling_side = false;
+        }
+        if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex ==  2) { //kingside  castle black
+          BitBoard[5]  = 'r';
+          BitBoard[7]  = ' ';
+          castling_occured = true;
+          castling_side = true;
+        }
+        if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex == -2) { //queenside castle black
+          BitBoard[3]  = 'r';
+          BitBoard[0]  = ' ';
+          castling_occured = true;
+          castling_side = false;
+        }
+  
+  if (BitBoard[bbcIndex] == 'P' && TobbIndex < 8) newPiece = promoted_pawn;
   if(TobbIndex != ' ') {
     BitBoard[TobbIndex] = ' ';
   }
@@ -241,20 +298,28 @@ void updatePieces() {
   addMove(bbcIndex, TobbIndex, true);
   turnState = 'P';
   
+  //for (int i = 0; i<8; i++) {
+  //  for (int j = 0; j<8; j++) { 
+  //    if (board[i][j] != null) {
+  //      if (board[i][j].pieceType == 'k' || board[i][j].pieceType == 'q' || board[i][j].pieceType == 'r' || board[i][j].pieceType == 'n' || board[i][j].pieceType == 'b' || board[i][j].pieceType == 'p') board[i][j].testcheck((8*i) + j);
+  //    }
+  //  }
+  //}
+  
       // Print BitBoard for debugging
-    //println("Print BitBoard for debugging");
-    //for(int i = 0; i < 64; i++) {
-    // print((char)BitBoard[i]);
-    // if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
-    //   println();
-    // }
-    //}
-    //println(" ");
+    println("Print BitBoard for debugging");
+    for(int i = 0; i < 64; i++) {
+     print((char)BitBoard[i]);
+     if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
+       println();
+     }
+    }
+    println(" ");
   
   println(movesHistory);
   
   print("Emulated serial communications --> ");
-  println(str(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
+  println(str(toBase64(BitBoard, castling_occured, castling_side, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
   
   for(int i = 0; i<64; i++) {
       board[i%8][floor(i/8)] = null;
@@ -348,7 +413,8 @@ void mousePressed() {
   
   for (int i = 0; i<8; i++){
     for (int j = 0; j<8; j++) { 
-    if (board[i][j] != null) {
+      //do not allow picking up enemy pieces
+      if (board[i][j] != null) {
         if(board[i][j].MouseIsOver()) {
           board[i][j].selected = true;
           board[i][j].fillArray();
@@ -360,13 +426,11 @@ void mousePressed() {
     }
   }
   // If the start menu is pressed, advance the game menu.
- if(start_button.MouseIsOver() && game_state !=2 ) {
+ if(start_button.MouseIsOver() && game_state != 2) {
+  newGame();
   game_state = 2; 
-  readFen(cur_fen);
-  stockfish.send_config();
-   
  }
- if(menu_button.MouseIsOver()  && game_state != 2) {
+ if(menu_button.MouseIsOver()  && game_state == 0) {
   game_state = 1; 
  }
  if(white.MouseIsOver()  && game_state == 1) {
@@ -375,6 +439,7 @@ void mousePressed() {
   black.active = false;
   random.active = false;
   cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  evalString = "e2e4";
  }
  if(black.MouseIsOver()  && game_state == 1) {
   which_side = 'b';
@@ -382,6 +447,7 @@ void mousePressed() {
   black.active = true;
   random.active = false;
   cur_fen = blk_fen;
+  evalString = "e7e5";
  }
  if(random.MouseIsOver()  && game_state == 1) {
   white.active = false; 
@@ -391,9 +457,11 @@ void mousePressed() {
       if(pick == 1) {
         which_side = 'b';
         cur_fen = blk_fen;
+        evalString = "e7e5";
       }else{
         which_side = 'w';
         cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        evalString = "e2e4";
       }
     
  }
@@ -401,6 +469,45 @@ void mousePressed() {
    diff_slider.active = true;
  }
  
+ if(resign.MouseIsOver() && game_state == 2) {
+   game_gg = true;
+ }
+ 
+ if(Q.MouseIsOver() && game_state == 2) {
+   Q.active = true;
+   R.active = false;
+   B.active = false;
+   N.active = false;
+   promoted_pawn = 'Q';
+ }
+ 
+  if(R.MouseIsOver() && game_state == 2) {
+   Q.active = false;
+   R.active = true;
+   B.active = false;
+   N.active = false;
+   promoted_pawn = 'R';
+ }
+ 
+  if(B.MouseIsOver() && game_state == 2) {
+   Q.active = false;
+   R.active = false;
+   B.active = true;
+   N.active = false;
+   promoted_pawn = 'B';
+ }
+ 
+ if(N.MouseIsOver() && game_state == 2) {
+   Q.active = false;
+   R.active = false;
+   B.active = false;
+   N.active =true;
+   promoted_pawn = 'N';
+ }
+ 
+ if(returnToMenu.MouseIsOver() && game_state == 3) {
+   game_state = 0;
+ }
 } //end of mousePressed
 
 void mouseReleased() {
@@ -416,13 +523,15 @@ void mouseReleased() {
 //    for (int j = 0; j < 8; j++) { 
   int i = (the_new_x)/100;
   int j = (the_new_y)/100;
-  
+
   if (i > 7 || j > 7) println("Overflow error!"); //this should never happen
-  
     if (i < 8 && j < 8) {
-      if (board[i][j] != null){
+      //do not allow moving enemy pieces
+      
+      if (board[i][j] != null) {
         if(board[i][j].MouseIsOver() && mouseX < boardSize && mouseY < boardSize) {
-          board[i][j].selected = false;
+          if (shesLegal[8*(mouseY/100)+(mouseX/100)] == true||shesLegal[8*(mouseY/100)+(mouseX/100)] == false) {
+            board[i][j].selected = false;
           board[i][j].x = int(mouseX/gridSize)*(gridSize)+gridSize/2;
           board[i][j].y = int(mouseY/gridSize)*(gridSize)+gridSize/2;
           //board[i][j].updateBB();
@@ -430,7 +539,13 @@ void mouseReleased() {
           newPiece = (char) BitBoard[i+(8*j)]; 
           bbcIndex = board[i][j].bbIndex;
         }
+        //if (shesLegal[8*(mouseY/100)+(mouseX/100)] == false) {
+        //  board[i][j].selected = false;
+        //  board[i][j].x = 50 + 100*i;
+        //  board[i][j].y = 50 + 100*j;
+        //}
       }
+    }
     }
 //    }
 //  }
@@ -458,13 +573,13 @@ void exampleCPUAnal(){
   }
 
   if (game_gg == false) {
-  if (forced_mate == false) text(nf((float)cpuAnal/100, 2, 2), boardSize + 5, height/2);
+  if (forced_mate == false) text(nf((float)(0-cpuAnal)/100, 2, 2), boardSize + 5, height/2);
   if (forced_mate == true && cpuAnal < 0)   {
-    text("-M" + str(abs(cpuAnal)), boardSize + 5, height/2);
+    text("+M" + str(abs(cpuAnal)), boardSize + 5, height/2);
     bar_pos = 0;
   }
   if (forced_mate == true && cpuAnal > -1)  {
-    text("+M" + str(abs(cpuAnal)), boardSize + 5, height/2);
+    text("-M" + str(abs(cpuAnal)), boardSize + 5, height/2);
     bar_pos = 800;
   }
   }
@@ -476,10 +591,17 @@ void exampleCPUAnal(){
     text("1-0", boardSize + 5, height/2);
     bar_pos = 0;
   }
+  textSize(25);
   fill(0);
-  text(movesHistory, boardSize + 50, 300);
+  text("Pawn Promotion", boardSize + 60, height/2.5-50);
   
-  text("Menu Buttons down here", boardSize + 50, height - 70);
+  text("Your Best Move: " + evalString, boardSize + 50, height - 70);
+  fill(100);
+  rect(boardSize+60, height/2.5-40, 320, 80, 15);
+  Q.display();
+  R.display();
+  B.display();
+  N.display();
 }
 
 //Star class for start menu background
@@ -531,7 +653,7 @@ class Button {
  }
  
  void display() {
-   fill(0, 255,0);
+   fill(50,255,50);
    if(active) rect(x-((w+ol)/2),y-((h+ol)/2),w+ol,h+ol,10);
    fill(c);
    rect(x-(w/2),y-(h/2),w,h,10);
@@ -549,4 +671,39 @@ class Button {
     }
     return false;
   }
+}
+
+void lossCard() {
+  rectMode(CENTER);
+  fill(75, 50, 200);
+  rect(width/2, height/2, width/2.5, height - 200, 20);
+  fill(200);
+  rect(width/2, height/2, width/2.6, height - 220, 20);
+  rectMode(CORNER);
+  start_button.display();
+  returnToMenu.display();
+  game_gg = true;
+}
+
+void newGame() {
+    bbcIndex = 420;
+    gg_countdown = 300;
+    game_gg = false;
+    forced_mate = false;
+    cpuAnal = 0;
+    queenside_cherry = true;
+     kingside_cherry = true;
+    for(int i = 0; i < 8; i++) {
+     for(int j = 0; j < 8; j++) {
+      board[i][j] = null; 
+      BitBoard[i*8+j] = ' ';
+     }
+    }
+    readFen(cur_fen);
+    stockfish.send_config();
+    player_time = 900;
+    computer_time = 900;
+    movesHistory = " moves ";
+    evalString = "e7e5";
+    if (which_side == 'w') evalString = "e2e4";
 }
