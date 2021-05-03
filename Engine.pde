@@ -13,8 +13,9 @@ import java.io.*;
   -Say
       * Sends a string to the engine using process builder io streams
   
-  Written by: Christian Brazeau, Timothy Reichert, and Peter Taranto
-  Last modified: 04/29/2021
+  Written by: Christian Brazeau
+  Other Contributers:
+  Last modified: 03/12/2021
 */
 
 int lineToSay = -1; // ????
@@ -51,8 +52,7 @@ class Engine {
     }else {
        println("sucessfully initialized output/input streams"); 
     }
-    
-    
+     
   }
   
   /*
@@ -120,9 +120,24 @@ String listen() {
       println(inputStr);
       String moveString = "";
       
-      if ( inputStr.contains("ponder")) {
+      if (inputStr.contains("ponder")) {
         evalString = inputStr.substring(inputStr.indexOf("ponder") + 7);
-        print("evalString: ");
+        if (which_side == 'b') {
+         //invert the eval string 
+         byte eval1 = (byte) evalString.charAt(0);
+         byte eval2 = (byte) evalString.charAt(1);
+         byte eval3 = (byte) evalString.charAt(2);
+         byte eval4 = (byte) evalString.charAt(3);
+
+         eval1 = (byte) (104 - eval1 + 97);
+         eval3 = (byte) (104 - eval3 + 97);
+         eval2 = (byte) (56  - eval2 + 49);
+         eval4 = (byte) (56  - eval4 + 49);
+         
+         evalString = str((char) eval1) + str((char) eval2) + str((char) eval3) + str((char) eval4);
+        }
+
+        print("evalString = ");
         println(evalString);
         moveString = inputStr.substring(10, inputStr.indexOf("ponder")-1);
       }
@@ -143,44 +158,76 @@ String listen() {
       }
       if (moveString.length() == 4 && !moveString.contains("(non")) { //move the piece
         int fromChar = (int) moveString.charAt(0) - 97;
-        int  fromInt  = (int) moveString.charAt(1) - 48;
+        int fromInt  = (int) moveString.charAt(1) - 48;
         int toChar   = (int) moveString.charAt(2) - 97;
-        int  toInt    = (int) moveString.charAt(3) - 48;
-        print(fromChar);
-        print(" ");
-        print(fromInt);
-        print(" ");
-        print(toChar);
-        print(" ");
-        print(toInt);
-        println(" ");
+        int toInt    = (int) moveString.charAt(3) - 48;
+        //print(fromChar);
+        //print(" ");
+        //print(fromInt);
+        //print(" ");
+        //print(toChar);
+        //print(" ");
+        //print(toInt);
+        //println(" ");
         int fromPos = fromChar + (8 - fromInt)*8;
         int toPos   = toChar   + (8 - toInt)*8;
-        print(fromPos);
-        print("-->");
-        println(toPos);
-        
-        if (BitBoard[fromPos] == 'K' && toPos-fromPos ==  2) { //kingside  castle white
-          BitBoard[61] = 'R';
-          BitBoard[63] = ' ';
+        //print(fromPos);
+        //print("-->");
+        //println(toPos);
+        if(which_side == 'w') {
+          if (BitBoard[fromPos] == 'K' && toPos-fromPos ==  2) { //kingside  castle white
+            BitBoard[61] = 'R';
+            BitBoard[63] = ' ';
+            castling_occured = true;
+            castling_side = true;
+          }
+          if (BitBoard[fromPos] == 'K' && toPos-fromPos == -2) { //queenside castle white
+            BitBoard[59] = 'R';
+            BitBoard[56] = ' ';
+            castling_occured = true;
+            castling_side = false;
+          }
+          if (BitBoard[fromPos] == 'k' && toPos-fromPos ==  2) { //kingside  castle black
+            BitBoard[5]  = 'r';
+            BitBoard[7]  = ' ';
+            castling_occured = true;
+            castling_side = true;
+          }
+          if (BitBoard[fromPos] == 'k' && toPos-fromPos == -2) { //queenside castle black
+            BitBoard[3]  = 'r';
+            BitBoard[0]  = ' ';
+            castling_occured = true;
+            castling_side = false;
+          }
+        }else{ // If the player is playing as Black
+          if (BitBoard[fromPos] == 'K' && toPos-fromPos ==  -2) { //kingside  castle black
+            BitBoard[58] = 'R';
+            BitBoard[56] = ' ';
+            castling_occured = true;
+            castling_side = true;
+          }
+          if (BitBoard[fromPos] == 'K' && toPos-fromPos == 2) { //queenside castle black
+            BitBoard[60] = 'R';
+            BitBoard[63] = ' ';
+            castling_occured = true;
+            castling_side = false;
+          }
+          if (BitBoard[fromPos] == 'k' && toPos-fromPos ==  -2) { //kingside  castle white
+            BitBoard[2]  = 'r';
+            BitBoard[0]  = ' ';
+            castling_occured = true;
+            castling_side = true;
+          }
+          if (BitBoard[fromPos] == 'k' && toPos-fromPos == 2) { //queenside castle white
+            BitBoard[4]  = 'r';
+            BitBoard[7]  = ' ';
+            castling_occured = true;
+            castling_side = false;
+          }
         }
-        if (BitBoard[fromPos] == 'K' && toPos-fromPos == -2) { //queenside castle white
-          BitBoard[59] = 'R';
-          BitBoard[56] = ' ';
-        }
-        if (BitBoard[fromPos] == 'k' && toPos-fromPos ==  2) { //kingside  castle black
-          BitBoard[5]  = 'r';
-          BitBoard[7]  = ' ';
-        }
-        if (BitBoard[fromPos] == 'k' && toPos-fromPos == -2) { //queenside castle black
-          BitBoard[3]  = 'r';
-          BitBoard[0]  = ' ';
-        }
-        
-        
-        
-        print("Emulated serial communication  --> ");
-        println(str(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
+
+        //print("Emulated serial communication  --> ");
+        //println(str(toBase64(BitBoard, castling_occured, castling_side, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
         //the turn indicated is correct
         byte oldPiece = BitBoard[fromPos];
         
@@ -197,6 +244,17 @@ String listen() {
     if (fromPos != toPos && promoted_cherry == false) movesHistory = movesHistory + bbCoordString(fromPos) + bbCoordString(toPos) + " ";
     if (fromPos != toPos && promoted_cherry == true)  movesHistory = movesHistory + bbCoordString(fromPos) + bbCoordString(toPos) + promoted_cpu_pawn + " ";
     promoted_cherry = false;
+    
+    if (board_connected == true) {
+      println("sending black move to uCPU: " + bbCoordString(fromPos) + bbCoordString(toPos) + str(((player_time / 60)*100) + (player_time % 60) + 1000) + turnState);
+      microPC.write(bbCoordString(fromPos));
+      microPC.write(bbCoordString(toPos));
+      microPC.write(str(((player_time / 60)*100) + (player_time % 60) + 1000));
+      microPC.write(turnState);
+      microPC.write(turnState);
+      paused = true;
+      //delay(15000); //wait for the move to complete
+    }
     
   if (oldPiece == 'p' && toPos > 55) {
    println("promoting the pawn");

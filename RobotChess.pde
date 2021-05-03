@@ -30,8 +30,10 @@ int boardSize = 800;
 float gridSize = boardSize/8;
 int pieceSize = (int)gridSize;
 
-int pressed_x = 0;
-int pressed_y = 0;
+int pressed_x  = 0;
+int pressed_y  = 0;
+int pressed_x2 = 0;
+int pressed_y2 = 0;
 int the_x = 0;
 int the_y = 0;
 
@@ -55,10 +57,11 @@ int bbcIndex = 420;
 
 //A string storing the current board state in FEN notation
 String cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-String blk_fen = "rnbqkbnr/pppp1ppp/8/4p3/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+String blk_fen = "rnbkqbnr/ppp1pppp/8/3p4/8/8/PPPPPPPP/RNBKQBNR w KQkq - 0 1";
 
 byte BitBoard[] = new byte[64];
 byte TempBoard[] = new byte[64];
+boolean shesLegal[] = new boolean[64];
 
 char turnState = 'P'; //P for white/player, p for black/computer
 
@@ -67,11 +70,17 @@ String evalString = "e2e4";
 //long frameCounter = 0;
 
 boolean castling_occured = false;
-boolean castline_side = false;      //false = queenside, true = kingside
+boolean castling_side = false;      //false = queenside, true = kingside
 
 char promoted_pawn = 'Q';     //what will the promoted pawn become
 char promoted_cpu_pawn = 'p'; //what the cpu promoted its pawn to
+boolean promoted_player_cherry = false;
 boolean promotionNotSelected = true;
+
+boolean queenside_cherry = true;
+boolean kingside_cherry  = true;
+
+boolean paused = false;
 
 void setup() { 
   for(int i = 0; i < 64; i++) BitBoard[i] = ' ';
@@ -112,7 +121,7 @@ void setup() {
   //readFen(cur_fen);
   //drawPieces();
   
-  //uCPUinit(0); //use the 2nd COM port
+  //uCPUinit(4); //use the 2nd COM port
 }
 
 void draw() {  
@@ -127,17 +136,21 @@ void draw() {
   switch(game_state){
   //Start Menu
   case 0:
+    frameRate(60);
     startMenu();
   break;
   
   //Setup Menu
   case 1:
+    frameRate(60);
     setup_menu();
   break;
   
   case 2:
+    frameRate(240);
     drawBoard();
     drawPieces();
+    
     keepTime();
     exampleCPUAnal();
     
@@ -147,14 +160,21 @@ void draw() {
     //stockfish.drawfunc(); //if (frameCounter % 10 == 0) ...
     //frameCounter++;
     //println("made it out alive");
+    textSize(10);
+    text(round(frameRate) + " FPS", width - 50, 20);
+    
+    if (board_connected == false) paused = false;
+    if (paused == true) text("Click to continue once the board made its move", width - 300, height / 2);
   break;
   
   case 3:
+    frameRate(60);
     if (gg_countdown >  0) gg_countdown--;
     if (gg_countdown == 0) lossCard();
   break;
   
   default:
+    frameRate(60);
   }
   
   if (bbcIndex == 400) updatePieces();
@@ -227,12 +247,43 @@ void drawPieces() {
         board[i][j].display();//piece
         board[i][j].MouseIsOver();
         board[i][j].move();
-        board[i][j].fillArray();
-        board[i][j].highlightLegal();
+        pressed_x2 = mouseX;
+        pressed_y2 = mouseY;
       }
     }
   }
+  for (int i = 0; i<8; i++){
+    for (int j = 0; j<8; j++) {
+      if (board[i][j] != null) highlightLegal(i, j);
+      }
+    }
 }
+
+void highlightLegal(int row, int col) {
+    if(board[row][col].selected){
+      //println(pieceType, " on ",bbIndex);
+      for(int i = 0; i < 64; i++) {
+        shesLegal[i] = false;
+        if(legalMoves[i] == true){
+          shesLegal[i] = true;
+        }
+      }
+      
+      //prevent castling through check
+  if(board[row][col].bbIndex == 60 && BitBoard[60] == 'K') {
+    if(queenside_cherry == false || shesLegal[59] == false || shesLegal[58] == false) shesLegal[58] = false;
+    if(kingside_cherry  == false || shesLegal[61] == false || shesLegal[62] == false) shesLegal[62] = false;
+  }
+  
+  for(int i = 0; i < 64; i++) {
+    if (shesLegal[i] == true) {
+      fill(40, 40, 80);
+          //println(bbIndex, " => ", i);
+          ellipse(gridSize/2 + (i%8)*(gridSize),gridSize/2 + (floor(i/8))*(gridSize),gridSize/4,gridSize/4);
+    }
+  }
+    }
+  }
 
 void updatePieces() {
   
@@ -251,21 +302,33 @@ void updatePieces() {
   if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex ==  2) { //kingside  castle white
           BitBoard[61] = 'R';
           BitBoard[63] = ' ';
+          castling_occured = true;
+          castling_side = true;
         }
         if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex == -2) { //queenside castle white
           BitBoard[59] = 'R';
           BitBoard[56] = ' ';
+          castling_occured = true;
+          castling_side = false;
         }
         if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex ==  2) { //kingside  castle black
           BitBoard[5]  = 'r';
           BitBoard[7]  = ' ';
+          castling_occured = true;
+          castling_side = true;
         }
         if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex == -2) { //queenside castle black
           BitBoard[3]  = 'r';
           BitBoard[0]  = ' ';
+          castling_occured = true;
+          castling_side = false;
         }
   
-  if (BitBoard[bbcIndex] == 'P' && TobbIndex < 8) newPiece = promoted_pawn;
+  if (BitBoard[bbcIndex] == 'P' && TobbIndex < 8) { 
+    newPiece = promoted_pawn;
+    promoted_player_cherry = true;
+  }
+  
   if(TobbIndex != ' ') {
     BitBoard[TobbIndex] = ' ';
   }
@@ -276,13 +339,13 @@ void updatePieces() {
   addMove(bbcIndex, TobbIndex, true);
   turnState = 'P';
   
-  for (int i = 0; i<8; i++) {
-    for (int j = 0; j<8; j++) { 
-      if (board[i][j] != null) {
-        if (board[i][j].pieceType == 'k' || board[i][j].pieceType == 'q' || board[i][j].pieceType == 'r' || board[i][j].pieceType == 'n' || board[i][j].pieceType == 'b' || board[i][j].pieceType == 'p') board[i][j].testcheck((8*i) + j);
-      }
-    }
-  }
+  //for (int i = 0; i<8; i++) {
+  //  for (int j = 0; j<8; j++) { 
+  //    if (board[i][j] != null) {
+  //      if (board[i][j].pieceType == 'k' || board[i][j].pieceType == 'q' || board[i][j].pieceType == 'r' || board[i][j].pieceType == 'n' || board[i][j].pieceType == 'b' || board[i][j].pieceType == 'p') board[i][j].testcheck((8*i) + j);
+  //    }
+  //  }
+  //}
   
       // Print BitBoard for debugging
     println("Print BitBoard for debugging");
@@ -296,8 +359,8 @@ void updatePieces() {
   
   println(movesHistory);
   
-  print("Emulated serial communications --> ");
-  println(str(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
+  //print("Emulated serial communications --> ");
+  //println(str(toBase64(BitBoard, castling_occured, castling_side, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
   
   for(int i = 0; i<64; i++) {
       board[i%8][floor(i/8)] = null;
@@ -392,9 +455,13 @@ void mousePressed() {
   for (int i = 0; i<8; i++){
     for (int j = 0; j<8; j++) { 
       //do not allow picking up enemy pieces
-      if (board[i][j] != null && (board[i][j].pieceType == 'K' || board[i][j].pieceType == 'Q' || board[i][j].pieceType == 'R' || board[i][j].pieceType == 'N' || board[i][j].pieceType == 'B' || board[i][j].pieceType == 'P')) {
+      if (paused == false && board[i][j] != null && (board[i][j].pieceType == 'K' || board[i][j].pieceType == 'Q' || board[i][j].pieceType == 'R' || board[i][j].pieceType == 'N' || board[i][j].pieceType == 'B' || board[i][j].pieceType == 'P')) {
         if(board[i][j].MouseIsOver()) {
           board[i][j].selected = true;
+          board[i][j].fillArray();
+          board[i][j].fillArray();
+          board[i][j].kingincheck();
+          board[i][j].testcheck();
         }    
       }
     }
@@ -413,6 +480,7 @@ void mousePressed() {
   black.active = false;
   random.active = false;
   cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  evalString = "e2e4";
  }
  if(black.MouseIsOver()  && game_state == 1) {
   which_side = 'b';
@@ -420,6 +488,7 @@ void mousePressed() {
   black.active = true;
   random.active = false;
   cur_fen = blk_fen;
+  evalString = "e7e5";
  }
  if(random.MouseIsOver()  && game_state == 1) {
   white.active = false; 
@@ -429,9 +498,11 @@ void mousePressed() {
       if(pick == 1) {
         which_side = 'b';
         cur_fen = blk_fen;
+        evalString = "e7e5";
       }else{
         which_side = 'w';
         cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        evalString = "e2e4";
       }
     
  }
@@ -493,13 +564,18 @@ void mouseReleased() {
 //    for (int j = 0; j < 8; j++) { 
   int i = (the_new_x)/100;
   int j = (the_new_y)/100;
-  
-  if (i > 7 || j > 7) println("Overflow error!"); //this should never happen
+
+  if (i > 7 || j > 7) {
+    println("Overflow error!"); //this should never happen unless you click outside of the pieces
+    paused = false; 
+  }
     if (i < 8 && j < 8) {
       //do not allow moving enemy pieces
+      
       if (board[i][j] != null && (board[i][j].pieceType == 'K' || board[i][j].pieceType == 'Q' || board[i][j].pieceType == 'R' || board[i][j].pieceType == 'N' || board[i][j].pieceType == 'B' || board[i][j].pieceType == 'P')) {
         if(board[i][j].MouseIsOver() && mouseX < boardSize && mouseY < boardSize) {
-          board[i][j].selected = false;
+          if (shesLegal[8*(mouseY/100)+(mouseX/100)] == true) {
+            board[i][j].selected = false;
           board[i][j].x = int(mouseX/gridSize)*(gridSize)+gridSize/2;
           board[i][j].y = int(mouseY/gridSize)*(gridSize)+gridSize/2;
           //board[i][j].updateBB();
@@ -507,7 +583,13 @@ void mouseReleased() {
           newPiece = (char) BitBoard[i+(8*j)]; 
           bbcIndex = board[i][j].bbIndex;
         }
+        if (shesLegal[8*(mouseY/100)+(mouseX/100)] == false) {
+          board[i][j].selected = false;
+          board[i][j].x = 50 + 100*i;
+          board[i][j].y = 50 + 100*j;
+        }
       }
+    }
     }
 //    }
 //  }
@@ -642,16 +724,23 @@ void lossCard() {
   fill(200);
   rect(width/2, height/2, width/2.6, height - 220, 20);
   rectMode(CORNER);
+  
+  
   start_button.display();
   returnToMenu.display();
+  textAlign(CENTER);
+  text("Game Over", width/2, 200);
   game_gg = true;
 }
 
 void newGame() {
+    bbcIndex = 420;
     gg_countdown = 300;
     game_gg = false;
     forced_mate = false;
     cpuAnal = 0;
+    queenside_cherry = true;
+     kingside_cherry = true;
     for(int i = 0; i < 8; i++) {
      for(int j = 0; j < 8; j++) {
       board[i][j] = null; 
@@ -663,4 +752,8 @@ void newGame() {
     player_time = 900;
     computer_time = 900;
     movesHistory = " moves ";
+    evalString = "e7e5";
+    if (which_side == 'w') evalString = "e2e4";
+    if (board_connected == true) microPC.write("``````````");
+    paused = true;
 }

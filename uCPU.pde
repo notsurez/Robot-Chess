@@ -1,15 +1,9 @@
-/*
-  Description
-  
-  Written by: Christian Brazeau, Timothy Reichert, and Peter Taranto
-  Last modified: 04/29/2021
-*/
 Serial microPC;
 boolean board_connected = false;
 
 void uCPUinit(int which_cpu) {
   print("Initializing uCPU on COM port ");
-  microPC = new Serial(this, Serial.list()[which_cpu], 57600);
+  microPC = new Serial(this, Serial.list()[which_cpu], 4800, 'N', 8, 1.0);
   board_connected = true;
   println(which_cpu);
 }
@@ -52,6 +46,8 @@ char[] toBase64(byte[] bb, boolean castling, boolean castling_side, int timeStri
   }
   
   castling_occured = false;
+  castling_side = false;
+  
   return charArr;
 }
 
@@ -87,16 +83,23 @@ void keepTime() {
   if (player_time%60 < 10) player_displayTime = str(player_time/60) + ":0" + str(player_time%60);
   text(player_displayTime, playerX+50, playerY+40);
   
+  if (paused == true) m = millis();
  if(millis() - m >= 1000) {
    //print("decrementing ");
    //println(turnState);
    
    if(turnState == 'P') {
+     if (player_time == 0) game_gg = true;
      player_time--;
      
      //print("Emulated clock  communications --> ");
      //println(str(toBase64(BitBoard, false, false, ((player_time / 60)*100) + (player_time % 60) + 1000, turnState))); //the bitboard, is castling, castling queen(false) or king(true), time string, player turn ('P' or 'p')
+     
+     //microPC.write("xxxx");
+     //microPC.write(str(((player_time / 60)*100) + (player_time % 60) + 1000));
+     //microPC.write("UU");
    }else {
+    if (computer_time == 0) game_gg = true;
     computer_time--; 
    }
   m = millis(); 
