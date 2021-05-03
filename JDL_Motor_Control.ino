@@ -21,6 +21,12 @@ int cap_X = 0;
 int cap_Y = 0;
 byte start = 56;
 byte finish = 7;
+//int G_Y_7 = 50;
+//int G_Y_15 = 750;
+//int G_Y_22 = 50;
+//int G_Y_31 = 750;
+int G_Y = 50;
+
 
 boolean debug_print = true; //set to false for motor movement, set to true for serial debug
 
@@ -542,7 +548,6 @@ void Det_Dir(byte start_loc, byte end_loc){
   Serial.print(F("F"));
 }
 //=========================================================
-
 void Det_Dir_Pl_Cap(byte start_loc_cap, int pl_cnt){
   if (pl_cnt <= 8){
     Player_Discard_X = 1150;
@@ -1245,18 +1250,44 @@ void restore_garbage(byte garbage_tile, byte destination) {
     Serial.print(F(" to board location "));
     Serial.println(destination); 
   }
-
-  if (garbage_tile < 16) left_garbage(garbage_tile, destination);
-  if (garbage_tile > 15) right_garbage(garbage_tile - 16, destination);
-  
+  //David put your code here
+  Det_XY_Reset(garbage_tile, destination);
   gameBoardState[destination] = discardPile[garbage_tile];
   oldgameBoardState[destination] = discardPile[garbage_tile];
 }
 
-void left_garbage(byte garbage_tile, byte destination) {
-  //David put your code here
-}
-
-void right_garbage(byte garbage_tile, byte destination) {
-  //David put your code here
+void Det_XY_Reset(byte garbage_tile, byte destination){
+  if(garbage_tile <= 7){
+    int G_X = 50;
+    Det_XY_E(destination);
+    move_mag_DE(G_X, G_Y);
+    engage_mag();
+    move_to_p(FL_X, FL_Y);
+    disengage_mag();
+    G_Y += 100;
+  }else if(garbage_tile > 7 and garbage_tile <= 15){
+    int G_X = 150;
+    Det_XY_E(destination);
+    move_mag_DE(G_X,G_Y);
+    engage_mag();
+    move_to_p(FL_X, FL_Y);
+    disengage_mag();
+    G_Y -= 100;
+  }else if(garbage_tile > 15 and garbage_tile <= 22){
+    int G_X = 1150;
+    Det_XY_E(destination);
+    move_mag_DE(G_X,G_Y);
+    engage_mag();
+    move_to_p(FL_X, FL_Y);
+    disengage_mag();
+    G_Y += 100;
+  }else if(garbage_tile > 22 and garbage_tile <= 31){
+    int G_X = 1050;
+    Det_XY_E(destination);
+    move_mag_DE(G_X,G_Y);
+    engage_mag();
+    move_to_p(FL_X, FL_Y);
+    disengage_mag();
+    G_Y -= 100;
+  }
 }
