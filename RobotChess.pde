@@ -57,7 +57,7 @@ int bbcIndex = 420;
 
 //A string storing the current board state in FEN notation
 String cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-String blk_fen = "rnbqkbnr/pppp1ppp/8/4p3/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+String blk_fen = "rnbkqbnr/ppp1pppp/8/3p4/8/8/PPPPPPPP/RNBKQBNR w KQkq - 0 1";
 
 byte BitBoard[] = new byte[64];
 byte TempBoard[] = new byte[64];
@@ -121,7 +121,7 @@ void setup() {
   //readFen(cur_fen);
   //drawPieces();
   
-  uCPUinit(4); //use the 2nd COM port
+  //uCPUinit(4); //use the 2nd COM port
 }
 
 void draw() {  
@@ -150,6 +150,7 @@ void draw() {
     frameRate(240);
     drawBoard();
     drawPieces();
+    
     keepTime();
     exampleCPUAnal();
     
@@ -248,11 +249,40 @@ void drawPieces() {
         board[i][j].move();
         pressed_x2 = mouseX;
         pressed_y2 = mouseY;
-        board[i][j].highlightLegal();
       }
     }
   }
+  for (int i = 0; i<8; i++){
+    for (int j = 0; j<8; j++) {
+      if (board[i][j] != null) highlightLegal(i, j);
+      }
+    }
 }
+
+void highlightLegal(int row, int col) {
+    if(board[row][col].selected){
+      //println(pieceType, " on ",bbIndex);
+      for(int i = 0; i < 64; i++) {
+        shesLegal[i] = false;
+        if(legalMoves[i] == true){
+          shesLegal[i] = true;
+        }
+      }
+      
+      //prevent castling through check
+  if(board[row][col].bbIndex == 60 && BitBoard[60] == 'K') {
+    if(queenside_cherry == false || shesLegal[59] == false || shesLegal[58] == false) shesLegal[58] = false;
+    if(kingside_cherry  == false || shesLegal[61] == false || shesLegal[62] == false) shesLegal[62] = false;
+  }
+  for(int i = 0; i < 64; i++) {
+    if (shesLegal[i] == true) {
+      fill(40, 40, 80);
+          //println(bbIndex, " => ", i);
+          ellipse(gridSize/2 + (i%8)*(gridSize),gridSize/2 + (floor(i/8))*(gridSize),gridSize/4,gridSize/4);
+    }
+  }
+    }
+  }
 
 void updatePieces() {
   
@@ -693,8 +723,12 @@ void lossCard() {
   fill(200);
   rect(width/2, height/2, width/2.6, height - 220, 20);
   rectMode(CORNER);
+  
+  
   start_button.display();
   returnToMenu.display();
+  textAlign(CENTER);
+  text("Game Over", width/2, 200);
   game_gg = true;
 }
 
