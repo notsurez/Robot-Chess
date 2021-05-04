@@ -1728,7 +1728,7 @@ void addMove(int fromLocation, int toLocation, boolean tellStockfish) {
   if (promoted_player_cherry == false) movesHistory = movesHistory + bbCoordString(fromLocation) + bbCoordString(toLocation) + " ";
   if (promoted_player_cherry == true)  movesHistory = movesHistory + bbCoordString(fromLocation) + bbCoordString(toLocation) + (char)(promoted_pawn ^ 0x20) + " ";
   promoted_player_cherry = false;
-  
+  println(castling_occured);
   if (board_connected == true) {
     println("sending white move to uCPU: " + bbCoordString(fromLocation) + bbCoordString(toLocation) + str(((player_time / 60)*100) + (player_time % 60) + 1000) + turnState);
     microPC.write(bbCoordString(fromLocation));
