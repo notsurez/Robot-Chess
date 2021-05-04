@@ -57,13 +57,13 @@ int bbcIndex = 420;
 
 //A string storing the current board state in FEN notation
 String cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-String blk_fen = "rnbqkbnr/pppp1ppp/8/4p3/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
+String blk_fen = "rnbkqbnr/ppp1pppp/8/3p4/8/8/PPPPPPPP/RNBKQBNR b KQkq - 0 1";
+String new_fen = "";
 byte BitBoard[] = new byte[64];
 byte TempBoard[] = new byte[64];
 boolean shesLegal[] = new boolean[64];
 
-char turnState = 'P'; //P for white/player, p for black/computer
+char turnState = 'P'; //P for white/player, C for black/computer
 
 String movesHistory = " moves ";
 String evalString = "e2e4";
@@ -121,7 +121,7 @@ void setup() {
   //readFen(cur_fen);
   //drawPieces();
   
-  uCPUinit(4); //use the 2nd COM port
+  //uCPUinit(4); //use the 2nd COM port
 }
 
 void draw() {  
@@ -181,6 +181,7 @@ void draw() {
   if (bbcIndex != 420) bbcIndex = 400;
 }//end "draw" function
 
+
 //Function to draw the chess board itself, string for which side the player is on
 void drawBoard(){
   color g_color;
@@ -213,6 +214,29 @@ void drawBoard(){
   }//outer for loop
 }// end "drawBoard"
 
+void generate_fen() {
+  new_fen = "";
+  int space_counter = 0;
+  for(int i = 0; i < 64; i++) {
+    if((int)BitBoard[i] <= 114 && (int)BitBoard[i] >= 65) {
+      if(space_counter != 0) new_fen += space_counter;
+      new_fen += (char) BitBoard[i];
+      space_counter = 0;
+    }else if((int)BitBoard[i] == ' ') {
+      space_counter++;
+    }
+    if(i == 7 || i == 15 || i == 23 || i == 31 || i == 39 || i == 47 || i == 55) {
+      if(space_counter != 0) new_fen += space_counter;
+      new_fen += '/';
+      space_counter = 0;
+    }
+    
+  }//end of for loop
+   if(turnState == 'P') new_fen += " w";
+   if(turnState == 'C') new_fen += " b";
+    new_fen += " KQkq - 0 1";
+  println("new_fen = " + new_fen);
+}
 
 //Function to read a fen string and initialize required variables for legal move logic
 void readFen(String curFen){
@@ -274,6 +298,7 @@ void highlightLegal(int row, int col) {
     if(queenside_cherry == false || shesLegal[59] == false || shesLegal[58] == false) shesLegal[58] = false;
     if(kingside_cherry  == false || shesLegal[61] == false || shesLegal[62] == false) shesLegal[62] = false;
   }
+  
   for(int i = 0; i < 64; i++) {
     if (shesLegal[i] == true) {
       fill(40, 40, 80);
@@ -297,30 +322,56 @@ void updatePieces() {
   
        bbcIndex = (int) floor(pressed_x/(int)gridSize)+floor(pressed_y/(int)gridSize)*8;
   int TobbIndex = (int) floor(the_x/(int)gridSize)+floor(the_y/(int)gridSize)*8;
-  
-  if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex ==  2) { //kingside  castle white
-          BitBoard[61] = 'R';
-          BitBoard[63] = ' ';
-          castling_occured = true;
-          castling_side = true;
-        }
-        if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex == -2) { //queenside castle white
-          BitBoard[59] = 'R';
-          BitBoard[56] = ' ';
-          castling_occured = true;
-          castling_side = false;
-        }
-        if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex ==  2) { //kingside  castle black
-          BitBoard[5]  = 'r';
-          BitBoard[7]  = ' ';
-          castling_occured = true;
-          castling_side = true;
-        }
-        if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex == -2) { //queenside castle black
-          BitBoard[3]  = 'r';
-          BitBoard[0]  = ' ';
-          castling_occured = true;
-          castling_side = false;
+  if(which_side == 'w') {
+          if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex ==  2) { //kingside  castle white
+            BitBoard[61] = 'R';
+            BitBoard[63] = ' ';
+            castling_occured = true;
+            castling_side = true;
+          }
+          if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex == -2) { //queenside castle white
+            BitBoard[59] = 'R';
+            BitBoard[56] = ' ';
+            castling_occured = true;
+            castling_side = false;
+          }
+          if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex ==  2) { //kingside  castle black
+            BitBoard[5]  = 'r';
+            BitBoard[7]  = ' ';
+            castling_occured = true;
+            castling_side = true;
+          }
+          if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex == -2) { //queenside castle black
+            BitBoard[3]  = 'r';
+            BitBoard[0]  = ' ';
+            castling_occured = true;
+            castling_side = false;
+          }
+        }else{ // If the player is playing as Black
+          if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex ==  -2) { //kingside  castle black
+            BitBoard[58] = 'R';
+            BitBoard[56] = ' ';
+            castling_occured = true;
+            castling_side = true;
+          }
+          if (BitBoard[bbcIndex] == 'K' && TobbIndex-bbcIndex == 2) { //queenside castle black
+            BitBoard[60] = 'R';
+            BitBoard[63] = ' ';
+            castling_occured = true;
+            castling_side = false;
+          }
+          if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex ==  -2) { //kingside  castle white
+            BitBoard[2]  = 'r';
+            BitBoard[0]  = ' ';
+            castling_occured = true;
+            castling_side = true;
+          }
+          if (BitBoard[bbcIndex] == 'k' && TobbIndex-bbcIndex == 2) { //queenside castle white
+            BitBoard[4]  = 'r';
+            BitBoard[7]  = ' ';
+            castling_occured = true;
+            castling_side = false;
+          }
         }
   
   if (BitBoard[bbcIndex] == 'P' && TobbIndex < 8) { 
