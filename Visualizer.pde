@@ -108,6 +108,14 @@ void draw() {
               is_moving = true;
       }else if(inBuffer.contains("!")){
               is_moving = false;
+      }else if(inBuffer.contains("?")){
+              which_side = 'b';
+              board = new ChessPiece[8][8];
+              readFen(cur_fen);
+      }else if(inBuffer.contains("@")){
+              which_side = 'w';
+              board = new ChessPiece[8][8];
+              readFen(cur_fen);
       }
       print(inBuffer);
     }

@@ -225,6 +225,14 @@ void loop() {
       skip_flag = true;
       if (debug_print == true) Serial.println(F("skipping, no pieces were made"));
     }
+    if (serialBase64input[1] == '?') {
+      Serial.print(F("?"));
+      if (debug_print == true) Serial.println(F("Black"));
+    }
+    if (serialBase64input[1] == '@') {
+      Serial.print(F("@"));
+      if (debug_print == true) Serial.println(F("White"));
+    }
 
     //for (byte d = 0; d < 11; d++) {
     //  //decode base64
