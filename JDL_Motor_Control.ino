@@ -1193,6 +1193,8 @@ void disengage_mag(){
 }
 
 void reset_board() {
+  move_mag_DE(50, 50);
+  Reset_stepper();
   opposite_discard = true;
   serialBase64input[0] = 'x';
   if (debug_print == true) Serial.println(F("Resetting board"));
@@ -1226,6 +1228,12 @@ void reset_board() {
   boolean horse_cherry = false;
   
   for (byte j = 0; j < 32; j++) {
+    if (j == 16) {
+    rook_cherry = false;
+    bishop_cherry = false;
+    horse_cherry = false;
+    }
+    
     if (discardPile[j] == P_KING)  restore_garbage(j, 60); //move from garbage[j] to 60
     if (discardPile[j] == P_QUEEN) restore_garbage(j, 59); //move from garbage[j] to 59
     if (discardPile[j] == P_ROOK   && rook_cherry == true)   restore_garbage(j, 63); //move from garbage[j] to 63
@@ -1248,12 +1256,6 @@ void reset_board() {
       wpawn_index++;
     }
 
-    if (j == 16) {
-    rook_cherry = false;
-    bishop_cherry = false;
-    horse_cherry = false;
-    }
-  
     if (discardPile[j] == C_KING)  restore_garbage(j, 4); //move from garbage[j] to 4
     if (discardPile[j] == C_QUEEN) restore_garbage(j, 3); //move from garbage[j] to 3
     if (discardPile[j] == C_ROOK   && rook_cherry == true)   restore_garbage(j, 7); //move from garbage[j] to 7
@@ -1280,6 +1282,11 @@ void reset_board() {
   memcpy(gameBoardState, default_gameBoardState, 96);
   memcpy(oldgameBoardState, default_gameBoardState, 96);
   memcpy(discardPile, default_discardPile, 32);
+  number_discarded_b = 0;
+  number_discarded_w = 16;
+  numPieces = 32;
+  oldnumPieces = 32;
+  opposite_discard = false;
 }
 
 void restore_garbage(byte garbage_tile_r, byte destination_r) {
@@ -1294,15 +1301,9 @@ void restore_garbage(byte garbage_tile_r, byte destination_r) {
   
   gameBoardState[destination_r] = discardPile[garbage_tile_r];
   oldgameBoardState[destination_r] = discardPile[garbage_tile_r];
-
-  number_discarded_b = 0;
-  number_discarded_w = 16;
-  numPieces = 32;
-  oldnumPieces = 32;
-  opposite_discard = false;
 }
 
-void Det_XY_Reset(byte garbage_tile, byte destination){
+void Det_XY_Reset_old(byte garbage_tile, byte destination){
   if(garbage_tile < 8){
     int G_X = 50;
     Det_XY_S(destination);
@@ -1333,6 +1334,120 @@ void Det_XY_Reset(byte garbage_tile, byte destination){
     move_mag_DE(G_X,G_Y);
     engage_mag();
     move_to_p(ST_X, ST_Y);
+    disengage_mag();
+    if (garbage_tile != 31) G_Y -= 100;
+  }
+}
+
+void To_Gridline_Reset(){
+  int h = 0;
+  if (debug_print == true) Serial.println(F("Moving to gridline"));
+  if (mag_y <= 400){
+    digitalWrite(3, LOW);
+    while (h < 50) {
+      digitalWrite(2, HIGH);
+      delay(slow_her_down);
+      digitalWrite(2, LOW);
+      if (debug_print == true) Serial.println(mag_y);
+      h = h + 5;
+      mag_y = mag_y + 5;
+      //Serial.print(F("|"));
+      //Serial.write(mag_y);
+      if(h%10==0) Serial.print(F("["));
+      if (debug_print == true) delay(slow_her_down);
+    }
+    if (debug_print == true) Serial.println(mag_y);
+  }else if(mag_y > 400){
+    digitalWrite(3, HIGH);
+    while (h < 50) {
+      digitalWrite(2, HIGH);
+      delay(slow_her_down);
+      digitalWrite(2, LOW);
+      if (debug_print == true) Serial.println(mag_y);
+      h = h + 5;
+      mag_y = mag_y - 5;
+      //Serial.print(F("+"));
+      //Serial.write(mag_y);
+      if(h%10==0) Serial.print(F("]"));
+      delay(slow_her_down);
+    }
+    if (debug_print == true) Serial.println(mag_y);
+  }
+}
+
+void move_to_p_Reset(int pmX, int pmY){
+  To_Gridline_Reset();
+  int dis_px = pmX - mag_x;
+  if (debug_print == true) {
+  Serial.print(F("The difference in X from start to finish is: "));
+  Serial.println(dis_px);
+  Serial.println(F("Starting movement in X direction"));
+  }
+  if (dis_px > 0){
+    X_CW_Stepper_P(pmX);
+  }else if(dis_px < 0){
+    X_CCW_Stepper_P(pmX);
+  }else if(dis_px == 0){
+    if(mag_x <= 600){
+      From_Gridline_R();
+    }else if(mag_x > 600){
+      From_Gridline_L();
+    }
+  }
+
+  int dis_py = pmY - mag_y;
+  if (debug_print == true) {
+  Serial.print(F("The distance in Y from start to finish is: "));
+  Serial.println(dis_py);
+  Serial.println(F("Starting motor movement in Y direction"));
+  }
+  //fix the return to center here
+  if (dis_py > 0){
+    Y_CCW_Stepper_P(pmY);
+    //From_Gridline_L();
+  }else if(dis_py < 0){
+    Y_CW_Stepper_P(pmY);
+    //From_Gridline_R();
+  }
+  if (debug_print == true) Serial.println(F("Moving back to the center of the tile"));
+  if(mag_x < pmX){
+    From_Gridline_R();
+  }else if(mag_x > pmX){
+    From_Gridline_L();
+  }
+}
+
+void Det_XY_Reset(byte garbage_tile, byte destination){
+  if(garbage_tile < 8){
+    int G_X = 50;
+    Det_XY_S(destination);
+    move_mag_DE(G_X, G_Y);
+    engage_mag();
+    move_to_p_Reset(ST_X, ST_Y);
+    disengage_mag();
+    if (garbage_tile != 7)  G_Y += 100;
+  }else if(garbage_tile > 7 and garbage_tile < 16){
+    int G_X = 150;
+    Det_XY_S(destination);
+    move_mag_DE(G_X,G_Y);
+    engage_mag();
+    move_to_p_Reset(ST_X, ST_Y);
+    disengage_mag();
+    if (garbage_tile != 15) G_Y -= 100;
+  }else if(garbage_tile > 15 and garbage_tile < 24){
+    int G_X = 1150;
+    Det_XY_S(destination);
+    move_mag_DE(G_X,G_Y);
+    engage_mag();
+    move_to_p_Reset(ST_X, ST_Y);
+    disengage_mag();
+    if (garbage_tile != 23) G_Y += 100;
+  }else if(garbage_tile > 23 and garbage_tile < 32){
+    int G_X = 1050;
+    Det_XY_S(destination);
+    move_mag_DE(G_X,G_Y);
+    engage_mag();
+    move_to_p_Reset(ST_X, ST_Y);
     disengage_mag();
     if (garbage_tile != 31) G_Y -= 100;
   }

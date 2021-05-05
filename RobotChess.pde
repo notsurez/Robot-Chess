@@ -79,6 +79,8 @@ boolean promotionNotSelected = true;
 
 boolean queenside_cherry = true;
 boolean kingside_cherry  = true;
+boolean queenside_cherry_b = true;
+boolean kingside_cherry_b  = true;
 
 boolean paused = false;
 
@@ -121,7 +123,7 @@ void setup() {
   //readFen(cur_fen);
   //drawPieces();
   
-  //uCPUinit(4); //use the 2nd COM port
+  uCPUinit(4); //use the 2nd COM port
 }
 
 void draw() {  
@@ -232,10 +234,15 @@ void generate_fen() {
     }
     
   }//end of for loop
-   if(turnState == 'P') new_fen += " w";
-   if(turnState == 'C') new_fen += " b";
-    new_fen += " KQkq - 0 1";
-  println("new_fen = " + new_fen);
+   if(turnState == 'P') new_fen += " w ";
+   if(turnState == 'C') new_fen += " b ";
+   if (kingside_cherry  == true) new_fen += "K";
+   if (queenside_cherry == true) new_fen += "Q";
+   if (kingside_cherry_b  == true) new_fen += "k";
+   if (queenside_cherry_b == true) new_fen += "q";
+   if (kingside_cherry == false && queenside_cherry == false && kingside_cherry_b == false && queenside_cherry_b == false) new_fen += "-";
+   new_fen += " - 0 1";
+   println("new_fen = " + new_fen);
 }
 
 //Function to read a fen string and initialize required variables for legal move logic
@@ -502,8 +509,8 @@ void mousePressed() {
   pressed_x = mouseX;
   pressed_y = mouseY;
   
-  for (int i = 0; i<8; i++){
-    for (int j = 0; j<8; j++) { 
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) { 
       //do not allow picking up enemy pieces
       if (paused == false && board[i][j] != null && (board[i][j].pieceType == 'K' || board[i][j].pieceType == 'Q' || board[i][j].pieceType == 'R' || board[i][j].pieceType == 'N' || board[i][j].pieceType == 'B' || board[i][j].pieceType == 'P')) {
         if(board[i][j].MouseIsOver()) {
@@ -645,7 +652,7 @@ void mouseReleased() {
 //  }
 }
 
-void exampleCPUAnal(){
+void exampleCPUAnal() {
   //Indicator Bar
   int bound = 2500;
   if (forced_mate == false && game_gg == false) bar_pos = map(cpuAnal, -bound, bound, 20, 780);
@@ -655,15 +662,19 @@ void exampleCPUAnal(){
      bar_pos =  20;
   }
 
-  fill(0);
+  if (which_side == 'w') fill(0);
+  if (which_side == 'b') fill(255);
   rect(boardSize, 0, 50, bar_pos, 10);
-  fill(255);
+  if (which_side == 'w') fill(255);
+  if (which_side == 'b') fill(0);
   rect(boardSize, bar_pos, 50, height, 10);
   textSize(13);
   if(bar_pos > height/2-5 ){
-    fill(255);
+    if (which_side == 'w') fill(255);
+    if (which_side == 'b') fill(0);
   }else{
-      fill(0);
+    if (which_side == 'w') fill(0);
+    if (which_side == 'b') fill(255);
   }
 
   if (game_gg == false) {
@@ -791,6 +802,8 @@ void newGame() {
     cpuAnal = 0;
     queenside_cherry = true;
      kingside_cherry = true;
+    queenside_cherry_b = true;
+     kingside_cherry_b = true;
     for(int i = 0; i < 8; i++) {
      for(int j = 0; j < 8; j++) {
       board[i][j] = null; 
