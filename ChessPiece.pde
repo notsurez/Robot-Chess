@@ -257,40 +257,12 @@ void fillArray() {
 
 }
 if(whiteinchecknw||whiteincheckne||whiteinchecksw||whiteincheckse||whiteincheckup||whiteinchecklt||whiteincheckdn||whiteincheckrt||whiteincheckknight||whiteincheckpawn){
-  println("cherry popped");
-  println("nig");
   check_cherry = true;
-   println();
-   println(whiteinchecknw);
-   println(whiteincheckne);
-   println(whiteinchecksw);
-   println(whiteincheckse);
-   println(whiteinchecklt);
-   println(whiteincheckup);
-   println(whiteincheckdn);
-   println(whiteincheckrt);
-   println(whiteincheckpawn);
-   println(whiteincheckknight);
-   println(whiteincheckking);
   }
 }
   void testcheck(){
     if(whiteinchecknw||whiteincheckne||whiteinchecksw||whiteincheckse||whiteincheckup||whiteinchecklt||whiteincheckdn||whiteincheckrt||whiteincheckknight||whiteincheckpawn){
-  println("cherry popped");
-  println("testcheck");
   check_cherry = true;
-   println();
-   println(whiteinchecknw);
-   println(whiteincheckne);
-   println(whiteinchecksw);
-   println(whiteincheckse);
-   println(whiteinchecklt);
-   println(whiteincheckup);
-   println(whiteincheckdn);
-   println(whiteincheckrt);
-   println(whiteincheckpawn);
-   println(whiteincheckknight);
-   println(whiteincheckking);
 }
       for(int j = 0; j < 64; j++){
         TempBoard[j] = BitBoard[j];
