@@ -70,6 +70,7 @@ char discardPile[32];
 byte number_discarded_b = 0;
 byte number_discarded_w = 16;
 boolean opposite_discard = false;
+boolean which_side = true;
 
 int fromPos = 420;
 int toPos = 420;
@@ -84,6 +85,19 @@ const char default_gameBoardState[96] = {C_ROOK, C_HORSE, C_BISHOP, C_QUEEN, C_K
                     EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, 
                     P_PAWN, P_PAWN, P_PAWN, P_PAWN, P_PAWN, P_PAWN, P_PAWN, P_PAWN,
                     P_ROOK, P_HORSE, P_BISHOP, P_QUEEN, P_KING, P_BISHOP, P_HORSE, P_ROOK,
+                    EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE,
+                    EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE,
+                    EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE,
+                    EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE};
+
+const char default_gameBoardState_b[96] = {C_ROOK, C_HORSE, C_BISHOP, C_KING, C_QUEEN, C_BISHOP, C_HORSE, C_ROOK,
+                    C_PAWN, C_PAWN, C_PAWN, EMPTY_TILE, C_PAWN, C_PAWN, C_PAWN, C_PAWN,  
+                    EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE,
+                    EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, C_PAWN, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE,
+                    EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE,
+                    EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, 
+                    P_PAWN, P_PAWN, P_PAWN, P_PAWN, P_PAWN, P_PAWN, P_PAWN, P_PAWN,
+                    P_ROOK, P_HORSE, P_BISHOP, P_KING, P_QUEEN, P_BISHOP, P_HORSE, P_ROOK,
                     EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE,
                     EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE,
                     EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE,
@@ -228,10 +242,19 @@ void loop() {
     if (serialBase64input[1] == '?') {
       Serial.print(F("?"));
       if (debug_print == true) Serial.println(F("Black"));
+      memcpy(gameBoardState, default_gameBoardState_b, 96);
+      memcpy(oldgameBoardState, default_gameBoardState_b, 96);
+      memcpy(discardPile, default_discardPile, 32);
+      which_side = false;
+      start_motor(11, 27);
     }
     if (serialBase64input[1] == '@') {
       Serial.print(F("@"));
+      memcpy(gameBoardState, default_gameBoardState, 96);
+      memcpy(oldgameBoardState, default_gameBoardState, 96);
+      memcpy(discardPile, default_discardPile, 32);
       if (debug_print == true) Serial.println(F("White"));
+      which_side = true;
     }
 
     //for (byte d = 0; d < 11; d++) {
@@ -269,6 +292,7 @@ Reserved locations:
 74 - white kingside
 */
 
+if (which_side == true) {
       if (fromPos == 60 && toPos == 62 && rgbLedColor == 'C' && oldgameBoardState[60] == 'K') {
         gameBoardState[61] = 'R';
         gameBoardState[63] = ' ';
@@ -291,6 +315,31 @@ Reserved locations:
         gameBoardState[0]  = ' ';
         start_motor(0,  3);
       }
+}
+if (which_side == false) {
+      if (fromPos == 59 && toPos == 57 && rgbLedColor == 'C' && oldgameBoardState[59] == 'K') {
+        gameBoardState[58] = 'R';
+        gameBoardState[56] = ' ';
+        start_motor(56, 58);
+      }
+
+      if (fromPos == 59 && toPos == 61 && rgbLedColor == 'C' && oldgameBoardState[59] == 'K') {
+        gameBoardState[60] = 'R';
+        gameBoardState[63] = ' ';
+        start_motor(63, 60);
+      }
+      if (fromPos ==  3 && toPos ==  1 && rgbLedColor == 'P' && oldgameBoardState[3]  == 'k') {
+        gameBoardState[2]  = 'r';
+        gameBoardState[0]  = ' ';
+        start_motor(0,  2);
+      }
+
+      if (fromPos ==  3 && toPos ==  5 && rgbLedColor == 'P' && oldgameBoardState[3]  == 'k') {
+        gameBoardState[4]  = 'r';
+        gameBoardState[7]  = ' ';
+        start_motor(7,  4);
+      }
+}
  
       for (int i = 0; i < 64; i++) {
         if (bitBoard[i] == 1) numPieces++;
@@ -524,15 +573,25 @@ void Initial_Handling(byte startPass, byte finishPass){ //byte start, byte finis
   if (finish == 69){
     if (gameBoardState[startPass] == 'K' || gameBoardState[startPass] == 'Q' || gameBoardState[startPass] == 'R' || gameBoardState[startPass] == 'B' || gameBoardState[startPass] == 'N' || gameBoardState[startPass] == 'P'){
       if (debug_print == true) Serial.println(F("Starting player capture sequence"));
-      Player_Discard++;
-      if (opposite_discard == false) Det_Dir_Com_Cap(start, Player_Discard);
-      if (opposite_discard == true)  Det_Dir_Pl_Cap(start, Player_Discard);
+      if (opposite_discard == false) {
+        Computer_Discard++;
+        Det_Dir_Com_Cap(start, Computer_Discard);
+      }
+      if (opposite_discard == true)  {
+        Player_Discard++;  
+        Det_Dir_Pl_Cap(start, Player_Discard);       
+      }
     }
     if (gameBoardState[startPass] == 'k' || gameBoardState[startPass] == 'q' || gameBoardState[startPass] == 'r' || gameBoardState[startPass] == 'b' || gameBoardState[startPass] == 'n' || gameBoardState[startPass] == 'p'){
       if (debug_print == true) Serial.println(F("Starting computer capture sequence"));
-      Computer_Discard++;
-      if (opposite_discard == false) Det_Dir_Pl_Cap(start, Computer_Discard);
-      if (opposite_discard == true)  Det_Dir_Com_Cap(start, Computer_Discard);
+      if (opposite_discard == false) {
+        Player_Discard++;       
+        Det_Dir_Pl_Cap(start, Player_Discard);
+      }
+      if (opposite_discard == true)  {
+        Computer_Discard++;
+        Det_Dir_Com_Cap(start, Computer_Discard);
+      }
     }
   }else{
     if (debug_print == true) Serial.println(F("Starting piece movement sequence"));
@@ -1203,17 +1262,21 @@ void disengage_mag(){
 void reset_board() {
   move_mag_DE(50, 50);
   Reset_stepper();
-  opposite_discard = true;
   serialBase64input[0] = 'x';
   if (debug_print == true) Serial.println(F("Resetting board"));
   char garbage;
   while (Serial.available()) garbage = Serial.read();
-  if (strncmp(gameBoardState, default_gameBoardState, 96) == 0) {
-    Serial.println(F("The board is already in the default position"));
+  if (which_side == true  && (strncmp(gameBoardState, default_gameBoardState, 96) == 0)) {
+    Serial.println(F("The board is already in the default white position"));
+    return;
+  }
+  if (which_side == false && (strncmp(gameBoardState, default_gameBoardState_b, 96) == 0)) {
+    Serial.println(F("The board is already in the default black position"));
     return;
   }
   //reset code goes here
   memcpy(oldgameBoardState, gameBoardState, 96);
+  opposite_discard = true;
   for(int i = 0; i < 64; i++) {
     if (gameBoardState[i] != EMPTY_TILE) motorEliminate(i, i);
   }
@@ -1242,8 +1305,10 @@ void reset_board() {
     horse_cherry = false;
     }
     
-    if (discardPile[j] == P_KING)  restore_garbage(j, 60); //move from garbage[j] to 60
-    if (discardPile[j] == P_QUEEN) restore_garbage(j, 59); //move from garbage[j] to 59
+    if (discardPile[j] == P_KING && which_side == true)  restore_garbage(j, 60); //move from garbage[j] to 60
+    if (discardPile[j] == P_QUEEN && which_side == true) restore_garbage(j, 59); //move from garbage[j] to 59
+    if (discardPile[j] == P_KING && which_side == false)  restore_garbage(j, 59); //move from garbage[j] to 59
+    if (discardPile[j] == P_QUEEN && which_side == false) restore_garbage(j, 60); //move from garbage[j] to 60
     if (discardPile[j] == P_ROOK   && rook_cherry == true)   restore_garbage(j, 63); //move from garbage[j] to 63
     if (discardPile[j] == P_ROOK   && rook_cherry == false) {
       rook_cherry = true;
@@ -1264,8 +1329,10 @@ void reset_board() {
       wpawn_index++;
     }
 
-    if (discardPile[j] == C_KING)  restore_garbage(j, 4); //move from garbage[j] to 4
-    if (discardPile[j] == C_QUEEN) restore_garbage(j, 3); //move from garbage[j] to 3
+    if (discardPile[j] == C_KING && which_side == true)  restore_garbage(j, 4); //move from garbage[j] to 4
+    if (discardPile[j] == C_QUEEN && which_side == true) restore_garbage(j, 3); //move from garbage[j] to 3
+    if (discardPile[j] == C_KING && which_side == false)  restore_garbage(j, 3); //move from garbage[j] to 3
+    if (discardPile[j] == C_QUEEN && which_side == false) restore_garbage(j, 4); //move from garbage[j] to 4
     if (discardPile[j] == C_ROOK   && rook_cherry == true)   restore_garbage(j, 7); //move from garbage[j] to 7
     if (discardPile[j] == C_ROOK   && rook_cherry == false) {
       rook_cherry = true;

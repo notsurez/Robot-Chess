@@ -11,8 +11,8 @@ int pieceSize = (int)gridSize/2;
 
 ChessPiece[][] board;   // Initialize 2d array of ChessPiece Objects
 
-String cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1";
-String blk_fen = "rnbkqbnr/ppp1pppp/8/3p4/8/8/PPPPPPPP/RNBKQBNR b KQkq - 0 1";
+String cur_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+String blk_fen = "rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR b KQkq - 0 1";
 
 String movesHistory = "position startpos moves ";
 byte BitBoard[] = new byte[64];
